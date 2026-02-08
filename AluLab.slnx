@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />
     <File Path="readme.md" />
+    <File Path="web.config" />
   </Folder>
   <Project Path="AluLab.Android/AluLab.Android.csproj">
     <Deploy />

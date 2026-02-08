@@ -27,10 +27,22 @@ namespace AluLab.Common.Services
 		/// </summary>
 		private readonly SemaphoreSlim _connectGate = new( 1, 1 );
 
+		private int _initialSyncDone;
+
 		/// <summary>
 		/// Indicates whether the hub connection is currently in the <see cref="HubConnectionState.Connected"/> state.
 		/// </summary>
 		public bool IsConnected => _connection?.State == HubConnectionState.Connected;
+
+		/// <summary>
+		/// Raised when a pin is toggled (live event or replayed snapshot).
+		/// </summary>
+		public event Action<string, bool>? PinToggled;
+
+		/// <summary>
+		/// Raised when ALU outputs changed (live event or replayed snapshot).
+		/// </summary>
+		public event Action<byte, string, string>? AluOutputsChanged;
 
 		/// <summary>
 		/// Initializes the service and configures the SignalR connection.
@@ -48,13 +60,24 @@ namespace AluLab.Common.Services
 			.Build();
 
 			_connection.Reconnecting += error => Task.CompletedTask;
-			_connection.Reconnected += connectionId => Task.CompletedTask;
+
+			_connection.Reconnected += connectionId =>
+			{
+				// Nach Reconnect erneut initial synchronisieren, sonst bleibt UI ggf. stale.
+				Interlocked.Exchange( ref _initialSyncDone, 0 );
+				_ = TryRunInitialSyncAsync();
+				return Task.CompletedTask;
+			};
 
 			_connection.Closed += async error =>
 			{
 				await Task.Delay( TimeSpan.FromSeconds( 5 ) );
 				try { await _connection.StartAsync(); } catch { }
 			};
+
+			// Hub -> Client Events zentral verdrahten
+			_connection.On<string, bool>( "PinToggled", ( pin, state ) => PinToggled?.Invoke( pin, state ) );
+			_connection.On<byte, string, string>( "AluOutputsChanged", ( raw, binary, hex ) => AluOutputsChanged?.Invoke( raw, binary, hex ) );
 		}
 
 		/// <summary>
@@ -79,7 +102,10 @@ namespace AluLab.Common.Services
 		public async Task EnsureConnectedAsync()
 		{
 			if( IsConnected )
+			{
+				await TryRunInitialSyncAsync().ConfigureAwait( false );
 				return;
+			}
 
 			await _connectGate.WaitAsync().ConfigureAwait( false );
 			try
@@ -93,6 +119,27 @@ namespace AluLab.Common.Services
 			{
 				_connectGate.Release();
 			}
+
+			await TryRunInitialSyncAsync().ConfigureAwait( false );
+		}
+
+		private async Task TryRunInitialSyncAsync()
+		{
+			if( Interlocked.Exchange( ref _initialSyncDone, 1 ) == 1 )
+				return;
+
+			// 1) Inputs snapshot -> als "PinToggled" replayen
+			var state = await GetStateAsync().ConfigureAwait( false );
+			if( state?.Pins is not null )
+			{
+				foreach( var kvp in state.Pins )
+					PinToggled?.Invoke( kvp.Key, kvp.Value );
+			}
+
+			// 2) Outputs snapshot -> als "AluOutputsChanged" replayen
+			var lastOutputs = await GetLastOutputsAsync().ConfigureAwait( false );
+			if( lastOutputs is not null )
+				AluOutputsChanged?.Invoke( lastOutputs.Raw, lastOutputs.Binary, lastOutputs.Hex );
 		}
 
 		/// <summary>

@@ -160,15 +160,34 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 				} );
 			} );
 
-		_ = EnsureSyncConnectedWithLoggingAsync();
-		_ = LoadInitialPinStateAsync();
+		_ = ConnectAndLoadInitialStateAsync();
+	}
+
+	private async System.Threading.Tasks.Task ConnectAndLoadInitialStateAsync()
+	{
+		try
+		{
+			AddLogItem( "Sync: ConnectAndLoadInitialStateAsync start" );
+
+			await EnsureSyncConnectedWithLoggingAsync();
+
+			AddLogItem( $"Sync: IsConnected={_syncService?.IsConnected}" );
+
+			await LoadInitialPinStateAsync();
+
+			AddLogItem( "Sync: ConnectAndLoadInitialStateAsync end" );
+		}
+		catch( Exception ex )
+		{
+			AddLogItem( $"Sync: ConnectAndLoadInitialStateAsync Fehler: {ex}" );
+		}
 	}
 
 	/// <summary>
 	/// Updates the user interface to reflect the current state of the ALU output signals based on the specified raw value.
 	/// </summary>
 	/// <remarks>Each bit in the <paramref name="raw"/> parameter maps to a distinct ALU output signal: bit 0 to F0,
-	/// bit 1 to F1, bit 2 to F2, bit 3 to F3, bit 4 to P, bit 5 to G, bit 6 to AEqualsB, and bit 7 to CN4. Setting a bit
+	/// bit 1 to F1, bit 2 to F2, and bit 3 to F3, bit 4 to P, bit 5 to G, bit 6 to AEqualsB, and bit 7 to CN4. Setting a bit
 	/// to 1 indicates the corresponding signal is active.</remarks>
 	/// <param name="raw">A byte representing the ALU output signals, where each bit corresponds to a specific signal to be displayed on the
 	/// UI.</param>
@@ -226,6 +245,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		try
 		{
 			state = await _syncService.GetStateAsync();
+			AddLogItem( $"Snapshot: GetState OK. Pins={(state?.Pins?.Count ?? -1)}" );
 		}
 		catch( Exception ex )
 		{
@@ -249,6 +269,12 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 			Interlocked.Exchange( ref _suppressSyncSend, 1 );
 			try
 			{
+				if ( state == null || state.Pins == null )
+				{
+					AddLogItem( $"Snapshot: Ungültiger Zustand (null), überspringe Pin-Update." );
+					return;
+				}
+
 				foreach( var kvp in state.Pins )
 					SetPinState( kvp.Key, kvp.Value );
 
@@ -510,13 +536,18 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		var ellipse = this.FindControl<Ellipse>( name );
 		if( ellipse == null )
 		{
-			// Hilft beim Debuggen, wenn Remote Pins sendet, die im XAML fehlen
 			AddLogItem( $"SetPinState ignoriert: Unbekannter Pin im UI: {name}" );
 			return;
 		}
 
 		_pinStates[ name ] = high;
 		SetEllipseFill( ellipse, high );
+
+		// Browser/WASM: Rendering zuverlässig anstoßen
+		ellipse.InvalidateVisual();
+		ellipse.InvalidateMeasure();
+		ellipse.InvalidateArrange();
+		this.InvalidateVisual();
 	}
 
 	/// <summary>

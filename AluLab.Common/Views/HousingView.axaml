@@ -1,19 +1,22 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
-			 x:Class="AluLab.Common.Views.HousingView"
-			 x:DataType="vm:HousingViewModel"
-			 Background="White"
-			 HorizontalAlignment="Stretch"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
+             x:Class="AluLab.Common.Views.HousingView"
+             x:Name="Root"
+             x:DataType="vm:HousingViewModel"
+             Background="White"
+             HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch">
+
     <UserControl.Styles>
         <Style Selector="TextBlock.pin-label">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Foreground" Value="Black"/>
         </Style>
+
         <Style Selector="Ellipse.pin">
             <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="30"/>
@@ -25,129 +28,130 @@
         </Style>
     </UserControl.Styles>
 
-    <Viewbox Stretch="Uniform" StretchDirection="Both">
-        <Grid Width="480" Height="320" Background="Transparent">
+    <Grid>
+        <Viewbox Stretch="Uniform" StretchDirection="Both">
+            <Grid Width="480" Height="320" Background="Transparent">
 
-            <!-- Housing Rectangle -->
-            <Rectangle x:Name="HousingRect"
-                       Stroke="Gray"
-                       StrokeThickness="4"
-                       Fill="Transparent"
-                       Width="430"
-                       Height="270"
+                <!-- Housing Rectangle -->
+                <Rectangle x:Name="HousingRect"
+                           Stroke="Gray"
+                           StrokeThickness="4"
+                           Fill="Transparent"
+                           Width="430"
+                           Height="270"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"
+                           Margin="25,25,0,0"
+                           ZIndex="1"/>
+
+                <Panel Background="PowderBlue"
+                       Width="425"
+                       Height="33"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Top"
-                       Margin="25,25,0,0"
-                       ZIndex="1"/>
+                       Margin="28,28,0,0"/>
 
-            <Panel Background="PowderBlue"
-                   Width="425"
-                   Height="33"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="28,28,0,0"/>
+                <Panel Background="Aquamarine"
+                       Width="422"
+                       Height="32"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Margin="29,259,0,0"/>
 
-            <Panel Background="Aquamarine"
-                   Width="422"
-                   Height="32"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="29,259,0,0"/>
+                <Panel Background="MistyRose"
+                       Width="211"
+                       Height="32"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Margin="240,259,0,0"/>
 
-            <Panel Background="MistyRose"
-                   Width="211"
-                   Height="32"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="240,259,0,0"/>
+                <Panel Background="Cornsilk"
+                       Width="38"
+                       Height="198"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Margin="29,61,0,0"/>
 
-            <Panel Background="Cornsilk"
-                   Width="38"
-                   Height="198"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="29,61,0,0"/>
+                <Panel Background="Cornsilk"
+                       Width="38"
+                       Height="198"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Top"
+                       Margin="413,61,0,0"/>
 
-            <Panel Background="Cornsilk"
-                   Width="38"
-                   Height="198"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Top"
-                   Margin="413,61,0,0"/>
+                <!-- Dotted Lines -->
+                <Line StartPoint="0,2"
+                      EndPoint="430,2"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="25,60,0,0"
+                      ZIndex="0"/>
 
-            <!-- Dotted Lines -->
-            <Line StartPoint="0,2"
-                  EndPoint="430,2"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="25,60,0,0"
-                  ZIndex="0"/>
+                <Line StartPoint="0,0"
+                      EndPoint="430,0"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="25,260,0,0"
+                      ZIndex="0"/>
 
-            <Line StartPoint="0,0"
-                  EndPoint="430,0"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="25,260,0,0"
-                  ZIndex="0"/>
+                <Line StartPoint="215,0"
+                      EndPoint="215,30"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="25,28,0,0"
+                      ZIndex="0"/>
 
-            <Line StartPoint="215,0"
-                  EndPoint="215,30"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="25,28,0,0"
-                  ZIndex="0"/>
+                <Line StartPoint="215,0"
+                      EndPoint="215,30"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="25,262,0,0"
+                      ZIndex="0"/>
 
-            <Line StartPoint="215,0"
-                  EndPoint="215,30"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="25,262,0,0"
-                  ZIndex="0"/>
+                <Line StartPoint="2,63"
+                      EndPoint="2,258"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="64,0,0,0"
+                      ZIndex="0"/>
 
-            <Line StartPoint="2,63"
-                  EndPoint="2,258"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="64,0,0,0"
-                  ZIndex="0"/>
+                <Line StartPoint="350,63"
+                      EndPoint="350,258"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      StrokeDashArray="1,1"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="64,0,0,0"
+                      ZIndex="0"/>
 
-            <Line StartPoint="350,63"
-                  EndPoint="350,258"
-                  Stroke="Gray"
-                  StrokeThickness="2"
-                  StrokeDashArray="1,1"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top"
-                  Margin="64,0,0,0"
-                  ZIndex="0"/>
-
-            <!-- Pin A3 -->
-            <StackPanel HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Margin="50,12,0,0"
-                        ZIndex="2"
-                        Orientation="Vertical">
-                <Ellipse Name="A3" Classes="pin"/>
-                <TextBlock Classes="pin-label"
-                           Margin="-5,0,0,0"
-                           Text="↓A3"
-                           HorizontalAlignment="Center"/>
-            </StackPanel>
+                <!-- Pin A3 -->
+                <StackPanel HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Margin="50,12,0,0"
+                            ZIndex="2"
+                            Orientation="Vertical">
+                    <Ellipse Name="A3" Classes="pin"/>
+                    <TextBlock Classes="pin-label"
+                               Margin="-5,0,0,0"
+                               Text="↓A3"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
 
 		<!-- Pin A2 -->
         <StackPanel HorizontalAlignment="Left"
@@ -500,6 +504,22 @@
                        Margin="5,0,0,0"/>
             <Ellipse Name="CN4" Classes="pin"/>
         </StackPanel>
+
+        <!-- Debug Log Overlay (bindet explizit an die View via #Root) -->
+        <Border Background="#CC000000"
+                CornerRadius="6"
+                Padding="8"
+                Margin="10"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom">
+            <TextBox Width="420"
+                     Height="160"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Text="{Binding #Root.LogsText}" />
+        </Border>
     </Grid>
     </Viewbox>
+</Grid>
 </UserControl>
