@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "AluLab.Gateway": {
+      "commandName": "Project",
+      "workingDirectory": "/opt/alulab",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "raspberry-iot-node:22",
+      "authenticationMode": "None"
+    }
+  }
+}

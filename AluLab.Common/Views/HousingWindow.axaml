@@ -1,0 +1,17 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:prism="http://prismlibrary.com/"
+        xmlns:views="clr-namespace:AluLab.Common.Views"
+        xmlns:vm="using:AluLab.ViewModels"
+        x:Class="AluLab.Common.Views.HousingWindow"
+        d:DesignHeight="350"
+        d:DesignWidth="500"
+        Title="AluLab"
+        Width="500"
+        Height="350"
+        Icon="/Assets/avalonia-logo.ico"
+        mc:Ignorable="d">
+  <views:HousingView />
+</Window>

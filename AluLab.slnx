@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+    <File Path="readme.md" />
+  </Folder>
+  <Project Path="AluLab.Android/AluLab.Android.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="AluLab.Board/AluLab.Board.csproj" Id="f6fc1db5-ee13-4e3b-9720-4dc480f9f202" />
+  <Project Path="AluLab.Browser/AluLab.Browser.csproj" />
+  <Project Path="AluLab.Common/AluLab.Common.csproj" />
+  <Project Path="AluLab.Gateway/AluLab.Gateway.csproj" />
+  <Project Path="AluLab.Server/AluLab.Server.csproj" />
+  <Project Path="AluLab.Workbench/AluLab.Workbench.csproj" />
+</Solution>
