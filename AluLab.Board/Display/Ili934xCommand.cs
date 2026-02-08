@@ -163,10 +163,10 @@
 		PositiveGammaCorrection = 0xE0,
 		/// <summary>Sets negative gamma correction.</summary>
 		NegativeGammaCorrection = 0xE1,
-		/// <summary>Controls digital gamma 1.</summary>
-		DigitalGammaControl1 = 0xE2,
-		/// <summary>Controls digital gamma 2.</summary>
-		DigitalGammaControl2 = 0xE3,
+		/// <summary>Controls binary gamma 1.</summary>
+		BinaryGammaControl1 = 0xE2,
+		/// <summary>Controls binary gamma 2.</summary>
+		BinaryGammaControl2 = 0xE3,
 
 		/// <summary>Controls the interface.</summary>
 		InterfaceControl = 0xF6,
