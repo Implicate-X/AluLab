@@ -6,6 +6,7 @@ using AluLab.Common;
 
 /// <summary>
 /// dotnet publish .\AluLab.Browser\AluLab.Browser.csproj -c Debug /p:DebugType=portable /p:DebugSymbols=true
+/// dotnet publish .\AluLab.Browser\AluLab.Browser.csproj --configuration Release
 /// The main entry point for the Avalonia browser application.
 /// </summary>
 internal sealed partial class Program

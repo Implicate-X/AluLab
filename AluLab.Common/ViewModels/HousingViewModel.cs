@@ -70,18 +70,12 @@ namespace AluLab.Common.ViewModels
 		{
 			try
 			{
-				await _service.StartAsync();
+				await _service.EnsureConnectedAsync();
 				Status = "Connected";
 				AddLog( "Connected to SignalR" );
 
-				_subscription = _service.Subscribe<string>( "ReceiveMessage", msg =>
-				{
-					Dispatcher.UIThread.Post( () =>
-					{
-						LastMessage = msg;
-						AddLog( $"Received: {msg}" );
-					} );
-				} );
+				_service.Log += OnServiceLog;
+				_subscription = new DisposableAction(() => _service.Log -= OnServiceLog);
 			}
 			catch( Exception ex )
 			{
@@ -90,12 +84,21 @@ namespace AluLab.Common.ViewModels
 			}
 		}
 
+		private void OnServiceLog(string msg)
+		{
+			Dispatcher.UIThread.Post(() =>
+			{
+				LastMessage = msg;
+				AddLog($"Received: {msg}");
+			});
+		}
+
 		private async Task DisconnectImplAsync()
 		{
 			try
 			{
 				_subscription?.Dispose();
-				await _service.StopAsync();
+				await _service.DisposeAsync();
 				Status = "Disconnected";
 				AddLog( "Disconnected from SignalR" );
 			}
@@ -119,7 +122,10 @@ namespace AluLab.Common.ViewModels
 
 			try
 			{
-				await _service.SendAsync( "SendMessage", payload );
+				// Da SyncService keine SendMessageAsync-Methode besitzt,
+				// muss hier eine alternative Methode genutzt werden.
+				// Bitte passen Sie den Code entsprechend Ihrer Implementierung an.
+
 				AddLog( $"Sent: {payload}" );
 			}
 			catch( Exception ex )
@@ -151,6 +157,13 @@ namespace AluLab.Common.ViewModels
 			AddLog( "ViewModel disposed" );
 
 			return ValueTask.CompletedTask;
+		}
+
+		private class DisposableAction : IDisposable
+		{
+			private readonly Action _dispose;
+			public DisposableAction(Action dispose) => _dispose = dispose;
+			public void Dispose() => _dispose();
 		}
 	}
 }

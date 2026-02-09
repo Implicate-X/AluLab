@@ -1,9 +1,23 @@
 using System.Text;
+using System.Text.Json;
 using AluLab.Common.Relay;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder( args );
 
-builder.Services.AddSignalR();
+builder.Services
+	.AddSignalR( options =>
+	{
+		options.AddFilter<HubInvocationLogFilter>();
+	} )
+	.AddJsonProtocol( options =>
+	{
+		options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+		options.PayloadSerializerOptions.DictionaryKeyPolicy = null;
+	} );
+
+builder.Services.AddSingleton<HubInvocationLogFilter>();
+
 builder.Services.AddCors( options =>
 {
 	options.AddDefaultPolicy( policy =>
@@ -18,12 +32,20 @@ builder.Services.AddCors( options =>
 
 var app = builder.Build();
 
+_ = SyncHub.GetSnapshot();
+
 app.UseHttpsRedirection();
 app.UseCors();
 
 app.MapHub<SyncHub>( "/sync" ).RequireCors();
 
-app.MapGet( "/sync/info", () => "Sync hub is available at /sync for SignalR clients (new)." );
+app.MapGet( "/sync/state", () =>
+{
+	var copy = SyncHub.GetSnapshot();
+	return Results.Json( new SyncState( copy ) );
+} ).RequireCors();
+
+app.MapGet( "/sync/info", () => "Sync hub is available at /sync for SignalR clients (new++)." );
 app.MapGet( "/", () => "AluLab IoT " + DateTime.Now.ToString() );
 
 app.MapGet( "/debug/routes", ( EndpointDataSource ds ) =>
@@ -49,7 +71,7 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 <html>
 <head>
   <meta charset=""utf-8"">
-  <title>SyncHub Monitor (Live)</title>
+  <title>SyncHub Monitor (Live++)</title>
   <style>
 	body{font-family:Segoe UI,Arial;margin:16px;}
 	#log{white-space:pre-wrap;font-family:Consolas,monospace;background:#f6f6f6;padding:8px;border-radius:4px}
@@ -57,7 +79,7 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
   </style>
 </head>
 <body>
-  <h2>SyncHub - Live Monitor</h2>
+  <h2>SyncHub - Live Monitor 0.104</h2>
   <p>Server time (UTC): " + DateTime.UtcNow.ToString( "O" ) + @"</p>
 
   <h3>Snapshot (current pin status)</h3>
@@ -128,3 +150,29 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 app.Run();
 
 internal record PushDto( string Pin, bool State );
+
+internal sealed class HubInvocationLogFilter : IHubFilter
+{
+	public async ValueTask<object?> InvokeMethodAsync(
+		HubInvocationContext invocationContext,
+		Func<HubInvocationContext, ValueTask<object?>> next )
+	{
+		try
+		{
+			var id = invocationContext.Context.ConnectionId ?? "unknown";
+			var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+			SyncHub.EnqueueEvent( new SyncHub.SyncEvent( now, id, $"Invoke:{invocationContext.HubMethodName}", true ) );
+
+			return await next( invocationContext );
+		}
+		catch( Exception ex )
+		{
+			var id = invocationContext.Context.ConnectionId ?? "unknown";
+			var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+			SyncHub.EnqueueEvent( new SyncHub.SyncEvent( now, id, $"InvokeFail:{invocationContext.HubMethodName}:{ex.GetType().Name}", false ) );
+			throw;
+		}
+	}
+}
+
+

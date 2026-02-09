@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace AluLab.Common.Relay;
 
@@ -13,11 +14,13 @@ public sealed record SyncState
 	/// <summary>
 	/// Gets the collection of pin states, indexed by pin name.
 	/// </summary>
+	[JsonPropertyName( "pins" )]
 	public Dictionary<string, bool> Pins { get; init; }
 
 	/// <summary>
 	/// Initializes a new instance of the SyncState class with an empty set of synchronization states.
 	/// </summary>
+	[JsonConstructor]
 	public SyncState() : this( new Dictionary<string, bool>() ) { }
 
 	/// <summary>
