@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json;
 using AluLab.Common.Relay;
 using Microsoft.AspNetCore.SignalR;
 
@@ -79,7 +78,7 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
   </style>
 </head>
 <body>
-  <h2>SyncHub - Live Monitor 0.104</h2>
+  <h2>SyncHub - Live Monitor 0.107</h2>
   <p>Server time (UTC): " + DateTime.UtcNow.ToString( "O" ) + @"</p>
 
   <h3>Snapshot (current pin status)</h3>
@@ -148,8 +147,6 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 } );
 
 app.Run();
-
-internal record PushDto( string Pin, bool State );
 
 internal sealed class HubInvocationLogFilter : IHubFilter
 {

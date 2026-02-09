@@ -104,9 +104,10 @@ public class SyncHub : Hub
 
 		var copy = s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
 
-		// WICHTIG: primitives Payload statt SyncState (WASM/Trimming robust)
 		await Clients.Caller.SendAsync( "SnapshotPins", copy );
-		await Clients.Caller.SendAsync( "SnapshotOutputs", s_lastOutputs );
+
+		byte? raw = s_lastOutputs?.Raw;
+		await Clients.Caller.SendAsync( "SnapshotOutputsRaw", raw );
 
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "ClientReadySent", true ) );
 	}
@@ -121,7 +122,9 @@ public class SyncHub : Hub
 		var copy = s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
 
 		await Clients.Caller.SendAsync( "SnapshotPins", copy );
-		await Clients.Caller.SendAsync( "SnapshotOutputs", s_lastOutputs );
+
+		byte? raw = s_lastOutputs?.Raw;
+		await Clients.Caller.SendAsync( "SnapshotOutputsRaw", raw );
 
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "RequestSnapshotSent", true ) );
 	}

@@ -27,6 +27,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 
 	private IDisposable? _syncLogSubscription;
 	private IDisposable? _snapshotPinsSubscription;
+	private IDisposable? _snapshotOutputsSubscription;
 
 	private int _suppressSyncSend;
 
@@ -96,6 +97,12 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 			_aluOutputsSubscription?.Dispose();
 			_aluOutputsSubscription = null;
 
+			_snapshotPinsSubscription?.Dispose();
+			_snapshotPinsSubscription = null;
+
+			_snapshotOutputsSubscription?.Dispose();
+			_snapshotOutputsSubscription = null;
+
 			_syncLogSubscription?.Dispose();
 			_syncLogSubscription = null;
 
@@ -115,12 +122,15 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 
 		_pinToggledSubscription?.Dispose();
 		_aluOutputsSubscription?.Dispose();
+
 		_snapshotPinsSubscription?.Dispose();
+		_snapshotOutputsSubscription?.Dispose();
 
 		_syncLogSubscription?.Dispose();
 		_syncLogSubscription = SubscribeSyncLog( _syncService );
 
 		_snapshotPinsSubscription = SubscribeSnapshotPins( _syncService );
+		_snapshotOutputsSubscription = SubscribeSnapshotOutputs( _syncService );
 
 		_pinToggledSubscription = _syncService.Subscribe<string, bool>(
 			"PinToggled",
@@ -199,6 +209,33 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		return new DelegateDisposable( () => syncService.SnapshotStateReceived -= Handler );
 	}
 
+	private IDisposable SubscribeSnapshotOutputs( SyncService syncService )
+	{
+		void Handler( AluLab.Common.Relay.SyncHub.AluOutputsDto? dto )
+		{
+			Dispatcher.UIThread.Post( () =>
+			{
+				Interlocked.Exchange( ref _suppressSyncSend, 1 );
+				try
+				{
+					var raw = dto?.Raw ?? (byte)0;
+					ApplyAluOutputsToUi( raw );
+
+					AddLogItem( dto is null
+						? "SnapshotOutputs applied: null -> Raw=0x00"
+						: $"SnapshotOutputs applied: Raw=0x{dto.Hex}" );
+				}
+				finally
+				{
+					Interlocked.Exchange( ref _suppressSyncSend, 0 );
+				}
+			} );
+		}
+
+		syncService.SnapshotOutputsReceived += Handler;
+		return new DelegateDisposable( () => syncService.SnapshotOutputsReceived -= Handler );
+	}
+
 	private sealed class DelegateDisposable : IDisposable
 	{
 		private Action? _dispose;
@@ -222,8 +259,8 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 			AddLogItem( $"Sync: IsConnected={_syncService?.IsConnected}" );
 
 			// Snapshot NICHT manuell laden:
-			// SyncService lädt initialen Snapshot selbst (nach ClientReady) und replayt ihn via PinToggled/AluOutputsChanged.
-			AddLogItem( "Sync: Initial-Snapshot über SyncService (replay events)." );
+			// Server pusht SnapshotPins/SnapshotOutputs nach ClientReady.
+			AddLogItem( "Sync: Initial-Snapshot über Server-Push (SnapshotPins/SnapshotOutputs)." );
 
 			AddLogItem( "Sync: ConnectAndLoadInitialStateAsync end" );
 		}
@@ -396,6 +433,19 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	}
 
 	public new event PropertyChangedEventHandler? PropertyChanged;
+
+	public bool IsLogOverlayVisible
+	{
+		get
+		{
+			return false;
+//#if ALULAB_LOGOVERLAY
+//			return true;
+//#else
+//			return false;
+//#endif
+		}
+	}
 }
 
 public sealed record PinToggledEventArgs( string PinName, bool State );

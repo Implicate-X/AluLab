@@ -63,6 +63,18 @@ namespace AluLab.Common.Services
 				Log?.Invoke( $"Sync: SnapshotOutputs received: {( dto is null ? "null" : $"raw=0x{dto.Hex}" )}" );
 				SnapshotOutputsReceived?.Invoke( dto );
 			} );
+
+			_connection.On<byte?>( "SnapshotOutputsRaw", raw =>
+			{
+				Log?.Invoke( $"Sync: SnapshotOutputsRaw received: {( raw is null ? "null" : $"0x{raw.Value:X2}" )}" );
+
+				// Legacy-Event weiterverwenden (HousingView kann dto->raw bereits)
+				var dto = raw is null
+					? null
+					: new SyncHub.AluOutputsDto( raw.Value, Convert.ToString( raw.Value, 2 ).PadLeft( 8, '0' ), raw.Value.ToString( "X2" ) );
+
+				SnapshotOutputsReceived?.Invoke( dto );
+			} );
 		}
 
 		public async Task EnsureConnectedAsync()
@@ -81,7 +93,6 @@ namespace AluLab.Common.Services
 
 				await _connection.StartAsync().ConfigureAwait( false );
 
-				// Wichtig: erst jetzt den "Ready"-Handshake senden
 				Log?.Invoke( $"Sync: Sending ClientReady token (len={_readyToken.Length})" );
 				await _connection.SendAsync( "ClientReady", _readyToken ).ConfigureAwait( false );
 			}
@@ -98,12 +109,12 @@ namespace AluLab.Common.Services
 			if( Interlocked.Exchange( ref _initialSyncDone, 1 ) == 1 )
 				return Task.CompletedTask;
 
-			Log?.Invoke( "Sync: Initial snapshot wird durch Server nach ClientReady gepusht." );
+			Log?.Invoke( "Sync: Warte auf SnapshotPins nach ClientReady." );
 			return Task.CompletedTask;
 		}
 
 		// --------------------------------------------------------------------
-		// Backward-compatible API (für HousingView.axaml.cs)
+		// Backward-compatible API (Legacy; nicht für Start-Snapshot in WASM verwenden)
 		// --------------------------------------------------------------------
 
 		public IDisposable Subscribe<T1, T2>( string methodName, Action<T1, T2> handler )
