@@ -438,12 +438,54 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	{
 		get
 		{
+#if ALULAB_LOGOVERLAY
+			return true;
+#else
 			return false;
-//#if ALULAB_LOGOVERLAY
-//			return true;
-//#else
-//			return false;
-//#endif
+			#endif
+		}
+	}
+
+	/// <summary>
+	/// Verarbeitet Touch-Koordinaten in Window-Koordinaten (DIPs) und toggelt beim Treffer eine Pin-Ellipse.
+	/// </summary>
+	public void ProcessTouch( double x, double y )
+	{
+		var window = VisualRoot as Window;
+		if( window is null )
+			return;
+
+		foreach( var name in _pinNames )
+		{
+			// Output-Pins sind read-only (werden von ALU gesetzt)
+			if( _outputPins.Contains( name ) )
+				continue;
+
+			var ellipse = this.FindControl<Ellipse>( name );
+			if( ellipse is null )
+				continue;
+
+			var pos = ellipse.TranslatePoint( new Point( 0, 0 ), window );
+			if( !pos.HasValue )
+				continue;
+
+			double bx = pos.Value.X;
+			double by = pos.Value.Y;
+			double bw = ellipse.Bounds.Width;
+			double bh = ellipse.Bounds.Height;
+
+			// Kreis-Hit-Test: Abstand zum Mittelpunkt prüfen
+			double centerX = bx + bw / 2.0;
+			double centerY = by + bh / 2.0;
+			double dx = x - centerX;
+			double dy = y - centerY;
+			double radius = Math.Max( bw, bh ) / 2.0;
+
+			if( dx * dx + dy * dy <= radius * radius )
+			{
+				TogglePinState( name, ellipse );
+				break;
+			}
 		}
 	}
 }

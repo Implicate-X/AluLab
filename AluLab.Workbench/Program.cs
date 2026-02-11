@@ -8,6 +8,7 @@ using Serilog.Events;
 using AluLab.Common;
 using AluLab.Board.Platform;
 using AluLab.Workbench.Hardware;
+using AluLab.Workbench.Services;
 
 namespace AluLab.Workbench;
 
@@ -104,6 +105,7 @@ sealed class Program
 
 						services.AddSingleton<IBoardHardwareContext, WorkbenchHardwareContext>();
 						services.AddSingleton<IBoardProvider, BoardProvider>();
+						services.AddSingleton<DisplayMirrorService>();
 					};
 
 					app.AfterHostServicesBuilt = sp =>
@@ -131,8 +133,6 @@ sealed class Program
 
 								try
 								{
-									// Workbench is hardware host: from now on, PinToggled comes in from the server,
-									// is written to MCP23017, and outputs are reported as AluOutputsChanged.
 									board.AluController.ConfigureSync( "https://iot.homelabs.one/sync", logger );
 									logger.LogInformation( "Board: ALU sync configured." );
 								}
@@ -151,6 +151,20 @@ sealed class Program
 						catch( Exception ex )
 						{
 							logger.LogError( ex, "Board: early check exception" );
+						}
+					};
+
+					app.MainWindowReady += window =>
+					{
+						try
+						{
+							var mirror = app.Services.GetRequiredService<DisplayMirrorService>();
+							mirror.Attach( window );
+						}
+						catch( Exception ex )
+						{
+							var logger = app.Services.GetService<ILogger<Program>>();
+							logger?.LogWarning( ex, "DisplayMirror: attach failed." );
 						}
 					};
 				}

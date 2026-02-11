@@ -1,547 +1,545 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
-             x:Class="AluLab.Common.Views.HousingView"
-             x:Name="Root"
-             x:DataType="vm:HousingViewModel"
-             Background="White"
-             HorizontalAlignment="Stretch"
-             VerticalAlignment="Stretch">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
+			 x:Class="AluLab.Common.Views.HousingView"
+			 x:Name="Root"
+			 x:DataType="vm:HousingViewModel"
+			 Background="White"
+			 HorizontalAlignment="Stretch"
+			 VerticalAlignment="Stretch">
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock.pin-label">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
+	<UserControl.Styles>
+		<Style Selector="TextBlock.pin-label">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontWeight" Value="Normal"/>
+			<Setter Property="Foreground" Value="Black"/>
+		</Style>
 
-        <Style Selector="Ellipse.pin">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Stroke" Value="Gray"/>
-            <Setter Property="StrokeThickness" Value="4"/>
-            <Setter Property="Fill" Value="White"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-    </UserControl.Styles>
+		<Style Selector="Ellipse.pin">
+			<Setter Property="Width" Value="30"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="Stroke" Value="Gray"/>
+			<Setter Property="StrokeThickness" Value="4"/>
+			<Setter Property="Fill" Value="White"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+		</Style>
+	</UserControl.Styles>
 
-    <Grid>
-        <Viewbox Stretch="Uniform" StretchDirection="Both">
-            <Grid Width="480" Height="320" Background="Transparent">
+	<Grid>
+		<Viewbox Stretch="Uniform" StretchDirection="Both">
+			<Grid Width="480" Height="320" Background="Transparent">
 
-                <!-- Housing Rectangle -->
-                <Rectangle x:Name="HousingRect"
-                           Stroke="Gray"
-                           StrokeThickness="4"
-                           Fill="Transparent"
-                           Width="430"
-                           Height="270"
-                           HorizontalAlignment="Left"
-                           VerticalAlignment="Top"
-                           Margin="25,25,0,0"
-                           ZIndex="1"/>
+				<!-- Housing Rectangle -->
+				<Rectangle x:Name="HousingRect"
+						   Stroke="Gray"
+						   StrokeThickness="4"
+						   Fill="Transparent"
+						   Width="430"
+						   Height="270"
+						   HorizontalAlignment="Left"
+						   VerticalAlignment="Top"
+						   Margin="25,25,0,0"
+						   ZIndex="1"/>
 
-                <Panel Background="PowderBlue"
-                       Width="425"
-                       Height="33"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Margin="28,28,0,0"/>
+				<Panel Background="PowderBlue"
+					   Width="425"
+					   Height="33"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Margin="28,28,0,0"/>
 
-                <Panel Background="Aquamarine"
-                       Width="422"
-                       Height="32"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Margin="29,259,0,0"/>
+				<Panel Background="Aquamarine"
+					   Width="422"
+					   Height="32"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Margin="29,259,0,0"/>
 
-                <Panel Background="MistyRose"
-                       Width="211"
-                       Height="32"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Margin="240,259,0,0"/>
+				<Panel Background="MistyRose"
+					   Width="211"
+					   Height="32"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Margin="240,259,0,0"/>
 
-                <Panel Background="Cornsilk"
-                       Width="38"
-                       Height="198"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Margin="29,61,0,0"/>
+				<Panel Background="Cornsilk"
+					   Width="38"
+					   Height="198"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Margin="29,61,0,0"/>
 
-                <Panel Background="Cornsilk"
-                       Width="38"
-                       Height="198"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Top"
-                       Margin="413,61,0,0"/>
+				<Panel Background="Cornsilk"
+					   Width="38"
+					   Height="198"
+					   HorizontalAlignment="Left"
+					   VerticalAlignment="Top"
+					   Margin="413,61,0,0"/>
 
-                <!-- Dotted Lines -->
-                <Line StartPoint="0,2"
-                      EndPoint="430,2"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="25,60,0,0"
-                      ZIndex="0"/>
+				<!-- Dotted Lines -->
+				<Line StartPoint="0,2"
+					  EndPoint="430,2"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="25,60,0,0"
+					  ZIndex="0"/>
 
-                <Line StartPoint="0,0"
-                      EndPoint="430,0"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="25,260,0,0"
-                      ZIndex="0"/>
+				<Line StartPoint="0,0"
+					  EndPoint="430,0"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="25,260,0,0"
+					  ZIndex="0"/>
 
-                <Line StartPoint="215,0"
-                      EndPoint="215,30"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="25,28,0,0"
-                      ZIndex="0"/>
+				<Line StartPoint="215,0"
+					  EndPoint="215,30"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="25,28,0,0"
+					  ZIndex="0"/>
 
-                <Line StartPoint="215,0"
-                      EndPoint="215,30"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="25,262,0,0"
-                      ZIndex="0"/>
+				<Line StartPoint="215,0"
+					  EndPoint="215,30"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="25,262,0,0"
+					  ZIndex="0"/>
 
-                <Line StartPoint="2,63"
-                      EndPoint="2,258"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="64,0,0,0"
-                      ZIndex="0"/>
+				<Line StartPoint="2,63"
+					  EndPoint="2,258"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="64,0,0,0"
+					  ZIndex="0"/>
 
-                <Line StartPoint="350,63"
-                      EndPoint="350,258"
-                      Stroke="Gray"
-                      StrokeThickness="2"
-                      StrokeDashArray="1,1"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top"
-                      Margin="64,0,0,0"
-                      ZIndex="0"/>
+				<Line StartPoint="350,63"
+					  EndPoint="350,258"
+					  Stroke="Gray"
+					  StrokeThickness="2"
+					  StrokeDashArray="1,1"
+					  HorizontalAlignment="Left"
+					  VerticalAlignment="Top"
+					  Margin="64,0,0,0"
+					  ZIndex="0"/>
 
-                <!-- Pin A3 -->
-                <StackPanel HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="50,12,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <Ellipse Name="A3" Classes="pin"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="-5,0,0,0"
-                               Text="↓A3"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-
-		<!-- Pin A2 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="100,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="A2" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓A2"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin A1 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="150,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="A1" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓A1"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin A0 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="200,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="A0" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓A0"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-        <!-- Pin B3 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="250,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="B3" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓B3"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin B2 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="300,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="B2" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓B2"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin B1 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="350,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="B1" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓B1"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin B0 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="400,12,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <Ellipse Name="B0" Classes="pin"/>
-            <TextBlock Classes="pin-label"
-                       Margin="-5,0,0,0"
-                       Text="↓B0"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
-
-		<!-- Pin S3:S0 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="12,76,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-
-			<!-- Pin S3 -->
-            <StackPanel HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Margin="0,0,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-                <Ellipse Name="S3" Classes="pin"/>
+				<!-- Pin A3 -->
 				<StackPanel HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="→"
-                               HorizontalAlignment="Left"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="S3"
-                               HorizontalAlignment="Left"/>
-                </StackPanel>
-            </StackPanel>
+							VerticalAlignment="Top"
+							Margin="50,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="A3" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓A3"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-			<!-- Pin S2 -->
-            <StackPanel HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Margin="0,15,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-                <Ellipse Name="S2" Classes="pin"/>
+				<!-- Pin A2 -->
 				<StackPanel HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="→"
-                               HorizontalAlignment="Left"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="S2"
-                               HorizontalAlignment="Left"/>
-                </StackPanel>
-            </StackPanel>
+							VerticalAlignment="Top"
+							Margin="100,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="A2" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓A2"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-			<!-- Pin S1 -->
-            <StackPanel HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Margin="0,15,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-                <Ellipse Name="S1" Classes="pin"/>
+				<!-- Pin A1 -->
 				<StackPanel HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="→"
-                               HorizontalAlignment="Left"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="S1"
-                               HorizontalAlignment="Left"/>
-                </StackPanel>
-            </StackPanel>
+							VerticalAlignment="Top"
+							Margin="150,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="A1" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓A1"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-			<!-- Pin S0 -->
-            <StackPanel HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Margin="0,15,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-                <Ellipse Name="S0" Classes="pin"/>
+				<!-- Pin A0 -->
 				<StackPanel HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="→"
-                               HorizontalAlignment="Left"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,0,0"
-                               Text="S0"
-                               HorizontalAlignment="Left"/>
-                </StackPanel>
-            </StackPanel>
+							VerticalAlignment="Top"
+							Margin="200,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="A0" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓A0"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-        </StackPanel>
+				<!-- Pin B3 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="250,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="B3" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓B3"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-		<!-- Pin CN, M -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="417,76,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
+				<!-- Pin B2 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="300,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="B2" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓B2"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-			<!-- Pin CN -->
-            <StackPanel HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0,0,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-				<StackPanel HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="0,-2,4,0"
-                               Text="←"
-                               HorizontalAlignment="Right"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="0,-2,4,0"
-                               Text="CN"
-                               HorizontalAlignment="Right"/>
-                </StackPanel>
-                <Ellipse Name="CN" Classes="pin"/>
-            </StackPanel>
+				<!-- Pin B1 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="350,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="B1" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓B1"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-			<!-- Pin M -->
-            <StackPanel HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0,15,0,0"
-                        ZIndex="2"
-                        Orientation="Horizontal">
-				<StackPanel HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Margin="0,0,0,0"
-                            ZIndex="2"
-                            Orientation="Vertical">
-                    <TextBlock Classes="pin-label"
-                               Margin="0,-2,4,0"
-                               Text="←"
-                               HorizontalAlignment="Right"/>
-                    <TextBlock Classes="pin-label"
-                               Margin="4,-2,4,0"
-                               Text="M"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-                <Ellipse Name="M" Classes="pin"/>
-            </StackPanel>
+				<!-- Pin B0 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="400,12,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<Ellipse Name="B0" Classes="pin"/>
+					<TextBlock Classes="pin-label"
+							   Margin="-5,0,0,0"
+							   Text="↓B0"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
 
-        </StackPanel>
+				<!-- Pin S3:S0 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="12,76,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
 
-        <!-- Pin F3 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="50,262,0,0"
-                    ZIndex="2"
-                    Orientation="Vertical">
-            <TextBlock Classes="pin-label"
-                       Text="F3↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="F3" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin S3 -->
+					<StackPanel HorizontalAlignment="Left"
+								VerticalAlignment="Top"
+								Margin="0,0,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<Ellipse Name="S3" Classes="pin"/>
+						<StackPanel HorizontalAlignment="Left"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="→"
+									   HorizontalAlignment="Left"/>
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="S3"
+									   HorizontalAlignment="Left"/>
+						</StackPanel>
+					</StackPanel>
 
-        <!-- Pin F2 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="100,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="F2↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="F2" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin S2 -->
+					<StackPanel HorizontalAlignment="Left"
+								VerticalAlignment="Top"
+								Margin="0,15,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<Ellipse Name="S2" Classes="pin"/>
+						<StackPanel HorizontalAlignment="Left"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="→"
+									   HorizontalAlignment="Left"/>
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="S2"
+									   HorizontalAlignment="Left"/>
+						</StackPanel>
+					</StackPanel>
 
-        <!-- Pin F1 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="150,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="F1↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="F1" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin S1 -->
+					<StackPanel HorizontalAlignment="Left"
+								VerticalAlignment="Top"
+								Margin="0,15,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<Ellipse Name="S1" Classes="pin"/>
+						<StackPanel HorizontalAlignment="Left"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="→"
+									   HorizontalAlignment="Left"/>
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="S1"
+									   HorizontalAlignment="Left"/>
+						</StackPanel>
+					</StackPanel>
 
-        <!-- Pin F0 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="200,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="F0↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="F0" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin S0 -->
+					<StackPanel HorizontalAlignment="Left"
+								VerticalAlignment="Top"
+								Margin="0,15,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<Ellipse Name="S0" Classes="pin"/>
+						<StackPanel HorizontalAlignment="Left"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="→"
+									   HorizontalAlignment="Left"/>
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,0,0"
+									   Text="S0"
+									   HorizontalAlignment="Left"/>
+						</StackPanel>
+					</StackPanel>
 
-        <!-- Pin P -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="250,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="P↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="P" Classes="pin"/>
-        </StackPanel>
+				</StackPanel>
 
-        <!-- Pin G -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="300,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="G↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="G" Classes="pin"/>
-        </StackPanel>
+				<!-- Pin CN, M -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="417,76,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
 
-        <!-- Pin A=B -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="350,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="A=B↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="AEqualsB" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin CN -->
+					<StackPanel HorizontalAlignment="Right"
+								VerticalAlignment="Top"
+								Margin="0,0,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<StackPanel HorizontalAlignment="Right"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="0,-2,4,0"
+									   Text="←"
+									   HorizontalAlignment="Right"/>
+							<TextBlock Classes="pin-label"
+									   Margin="0,-2,4,0"
+									   Text="CN"
+									   HorizontalAlignment="Right"/>
+						</StackPanel>
+						<Ellipse Name="CN" Classes="pin"/>
+					</StackPanel>
 
-        <!-- Pin CN+4 -->
-        <StackPanel HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="400,262,0,0"
-                    ZIndex="2">
-            <TextBlock Classes="pin-label"
-                       Text="CN+4↓"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="5,0,0,0"/>
-            <Ellipse Name="CN4" Classes="pin"/>
-        </StackPanel>
+					<!-- Pin M -->
+					<StackPanel HorizontalAlignment="Right"
+								VerticalAlignment="Top"
+								Margin="0,15,0,0"
+								ZIndex="2"
+								Orientation="Horizontal">
+						<StackPanel HorizontalAlignment="Right"
+									VerticalAlignment="Top"
+									Margin="0,0,0,0"
+									ZIndex="2"
+									Orientation="Vertical">
+							<TextBlock Classes="pin-label"
+									   Margin="0,-2,4,0"
+									   Text="←"
+									   HorizontalAlignment="Right"/>
+							<TextBlock Classes="pin-label"
+									   Margin="4,-2,4,0"
+									   Text="M"
+									   HorizontalAlignment="Center"/>
+						</StackPanel>
+						<Ellipse Name="M" Classes="pin"/>
+					</StackPanel>
 
-        <!-- Debug Log Overlay (bindet explizit an die View via #Root) -->
-        <Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
-                Background="#CC000000"
-                CornerRadius="6"
-                Padding="8"
-                Margin="10"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom">
-            <TextBox Width="420"
-                     Height="160"
-                     IsReadOnly="True"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     Text="{Binding #Root.LogsText}" />
-        </Border>
+				</StackPanel>
 
-        <!-- Log-Overlay (sichtbar nur wenn ALULAB_LOGOVERLAY definiert ist) -->
-        <Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
-                Background="#AA000000"
-                CornerRadius="6"
-                Padding="8"
-                Width="430"
-                Height="120"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Margin="25,0,0,25"
-                ZIndex="1000">
-            <ScrollViewer>
-                <TextBlock Text="{Binding #Root.LogsText}"
-                           Foreground="White"
-                           FontFamily="Consolas"
-                           FontSize="11"
-                           TextWrapping="NoWrap" />
-            </ScrollViewer>
-        </Border>
+				<!-- Pin F3 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="50,262,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
+					<TextBlock Classes="pin-label"
+							   Text="F3↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="F3" Classes="pin"/>
+				</StackPanel>
 
-    </Grid>
-        </Viewbox>
-    </Grid>
+				<!-- Pin F2 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="100,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="F2↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="F2" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin F1 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="150,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="F1↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="F1" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin F0 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="200,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="F0↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="F0" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin P -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="250,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="P↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="P" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin G -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="300,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="G↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="G" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin A=B -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="350,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="A=B↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="AEqualsB" Classes="pin"/>
+				</StackPanel>
+
+				<!-- Pin CN+4 -->
+				<StackPanel HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							Margin="400,262,0,0"
+							ZIndex="2">
+					<TextBlock Classes="pin-label"
+							   Text="CN+4↓"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Top"
+							   Margin="5,0,0,0"/>
+					<Ellipse Name="CN4" Classes="pin"/>
+				</StackPanel>
+
+				<Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
+						Background="#CC000000"
+						CornerRadius="6"
+						Padding="8"
+						Margin="10"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Bottom">
+					<TextBox Width="420"
+							 Height="160"
+							 IsReadOnly="True"
+							 AcceptsReturn="True"
+							 TextWrapping="Wrap"
+							 Text="{Binding #Root.LogsText}" />
+				</Border>
+
+				<!-- Log-Overlay (ALULAB_LOGOVERLAY must be defined) -->
+				<Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
+						Background="#AA000000"
+						CornerRadius="6"
+						Padding="8"
+						Width="430"
+						Height="120"
+						HorizontalAlignment="Left"
+						VerticalAlignment="Bottom"
+						Margin="25,0,0,25"
+						ZIndex="1000">
+					<ScrollViewer>
+						<TextBlock Text="{Binding #Root.LogsText}"
+								   Foreground="White"
+								   FontFamily="Consolas"
+								   FontSize="11"
+								   TextWrapping="NoWrap" />
+					</ScrollViewer>
+				</Border>
+			</Grid>
+		</Viewbox>
+	</Grid>
 </UserControl>

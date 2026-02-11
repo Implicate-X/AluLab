@@ -362,7 +362,8 @@ namespace AluLab.Board
 			_display.Initialize();
 
 			touchController = new XPT2046Touch( _hw.TouchSpi );
-			return true;
+
+			return _display != null && touchController != null;
 		}
 
 		/// <summary>

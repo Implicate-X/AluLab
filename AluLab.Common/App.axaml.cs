@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Data.Core.Plugins;
@@ -14,17 +15,10 @@ public partial class App : Application
 {
 	public IServiceProvider Services { get; private set; } = default!;
 
-	/// <summary>
-	/// Optionaler Hook für Host-Projekte, um zusätzliche DI-Registrierungen vorzunehmen
-	/// (z.B. Board, Gateway-spezifische Services), ohne dass <c>AluLab.Common</c> diese kennt.
-	/// </summary>
 	public Action<IServiceCollection>? ConfigureHostServices { get; set; }
-
-	/// <summary>
-	/// Optionaler Hook für Host-Projekte, um nach dem Erstellen des DI-Containers
-	/// Initialisierungen/Checks durchzuführen (z.B. Board-Erkennung).
-	/// </summary>
 	public Action<IServiceProvider>? AfterHostServicesBuilt { get; set; }
+
+	public event Action<Window>? MainWindowReady;
 
 	public override void Initialize()
 	{
@@ -45,7 +39,10 @@ public partial class App : Application
 
 		if( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
 		{
-			desktop.MainWindow = new HousingWindow();
+			var window = new HousingWindow();
+			desktop.MainWindow = window;
+
+			window.Opened += ( _, _ ) => MainWindowReady?.Invoke( window );
 		}
 
 		base.OnFrameworkInitializationCompleted();
