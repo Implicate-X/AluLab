@@ -6,6 +6,11 @@ using AluLab.Common.Services;
 
 namespace AluLab.Common.ViewModels
 {
+	/// <summary>
+	/// ViewModel for managing housing-related synchronization and status updates.
+	/// Handles connection and disconnection to a backend service via SignalR,
+	/// maintains status and log messages, and exposes commands for UI interaction.
+	/// </summary>
 	public partial class HousingViewModel : ViewModelBase, IAsyncDisposable
 	{
 		private readonly SyncService _service;
@@ -13,6 +18,10 @@ namespace AluLab.Common.ViewModels
 		private bool _disposed;
 
 		private string? _statusValue;
+		/// <summary>
+		/// Gets or sets the current connection status.
+		/// Updates the log when the status changes.
+		/// </summary>
 		public string? Status
 		{
 			get => _statusValue;
@@ -26,6 +35,9 @@ namespace AluLab.Common.ViewModels
 		}
 
 		private string? _lastMessage;
+		/// <summary>
+		/// Gets or sets the last message received from the service.
+		/// </summary>
 		public string? LastMessage
 		{
 			get => _lastMessage;
@@ -33,6 +45,9 @@ namespace AluLab.Common.ViewModels
 		}
 
 		private string? _message;
+		/// <summary>
+		/// Gets or sets a general message property for UI binding.
+		/// </summary>
 		public string? Message
 		{
 			get => _message;
@@ -40,6 +55,9 @@ namespace AluLab.Common.ViewModels
 		}
 
 		private string _logsText = string.Empty;
+		/// <summary>
+		/// Gets the accumulated log text for display in the UI.
+		/// </summary>
 		public string LogsText
 		{
 			get => _logsText;
@@ -48,12 +66,21 @@ namespace AluLab.Common.ViewModels
 
 		private readonly IAsyncRelayCommand _connectCommand;
 		private readonly IAsyncRelayCommand _disconnectCommand;
-		//private readonly IAsyncRelayCommand _sendTestCommand;
 
+		/// <summary>
+		/// Command to initiate connection to the backend service.
+		/// </summary>
 		public IAsyncRelayCommand ConnectCommand => _connectCommand;
+		/// <summary>
+		/// Command to disconnect from the backend service.
+		/// </summary>
 		public IAsyncRelayCommand DisconnectCommand => _disconnectCommand;
-		//public IAsyncRelayCommand SendTestCommand => _sendTestCommand;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="HousingViewModel"/> class.
+		/// </summary>
+		/// <param name="service">The synchronization service to use for backend communication.</param>
+		/// <exception cref="ArgumentNullException">Thrown if <paramref name="service"/> is null.</exception>
 		public HousingViewModel( SyncService service )
 		{
 			_service = service ?? throw new ArgumentNullException( nameof( service ) );
@@ -63,9 +90,12 @@ namespace AluLab.Common.ViewModels
 
 			_connectCommand = new AsyncRelayCommand( ConnectImplAsync );
 			_disconnectCommand = new AsyncRelayCommand( DisconnectImplAsync );
-			//_sendTestCommand = new AsyncRelayCommand( SendTestImplAsync );
 		}
 
+		/// <summary>
+		/// Asynchronously connects to the backend service and subscribes to log events.
+		/// Updates status and logs accordingly.
+		/// </summary>
 		private async Task ConnectImplAsync()
 		{
 			try
@@ -84,6 +114,11 @@ namespace AluLab.Common.ViewModels
 			}
 		}
 
+		/// <summary>
+		/// Handles log messages from the service, updating the last message and appending to the log.
+		/// Ensures updates are posted to the UI thread.
+		/// </summary>
+		/// <param name="msg">The log message received from the service.</param>
 		private void OnServiceLog(string msg)
 		{
 			Dispatcher.UIThread.Post(() =>
@@ -93,6 +128,10 @@ namespace AluLab.Common.ViewModels
 			});
 		}
 
+		/// <summary>
+		/// Asynchronously disconnects from the backend service and unsubscribes from log events.
+		/// Updates status and logs accordingly.
+		/// </summary>
 		private async Task DisconnectImplAsync()
 		{
 			try
@@ -109,31 +148,11 @@ namespace AluLab.Common.ViewModels
 			}
 		}
 
-		private async Task SendTestImplAsync()
-		{
-			if( !_service.IsConnected )
-			{
-				Status = "Not connected";
-				AddLog( "Send aborted: not connected" );
-				return;
-			}
-
-			var payload = string.IsNullOrWhiteSpace( Message ) ? "Hello from AluLab Sync client" : Message;
-
-			try
-			{
-				// Da SyncService keine SendMessageAsync-Methode besitzt,
-				// muss hier eine alternative Methode genutzt werden.
-
-				AddLog( $"Sent: {payload}" );
-			}
-			catch( Exception ex )
-			{
-				Status = $"Send failed: {ex.Message}";
-				AddLog( $"Send failed: {ex.Message}" );
-			}
-		}
-
+		/// <summary>
+		/// Adds a log entry with a timestamp to the <see cref="LogsText"/> property.
+		/// Ensures thread-safe updates to the UI.
+		/// </summary>
+		/// <param name="text">The log text to add.</param>
 		private void AddLog( string text )
 		{
 			var entry = $"{DateTime.Now:HH:mm:ss} - {text}";
@@ -147,6 +166,10 @@ namespace AluLab.Common.ViewModels
 			}
 		}
 
+		/// <summary>
+		/// Disposes the ViewModel asynchronously, unsubscribing from events and logging disposal.
+		/// </summary>
+		/// <returns>A completed <see cref="ValueTask"/>.</returns>
 		public ValueTask DisposeAsync()
 		{
 			if( _disposed ) return ValueTask.CompletedTask;
@@ -158,6 +181,10 @@ namespace AluLab.Common.ViewModels
 			return ValueTask.CompletedTask;
 		}
 
+		/// <summary>
+		/// Helper class for executing an action upon disposal.
+		/// Used for unsubscribing from events.
+		/// </summary>
 		private class DisposableAction : IDisposable
 		{
 			private readonly Action _dispose;

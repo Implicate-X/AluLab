@@ -5,10 +5,10 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using AluLab.Board.Platform;
-using AluLab.Common.Views;
 using Iot.Device.Graphics;
 using Iot.Device.Graphics.SkiaSharpAdapter;
+using AluLab.Board.Platform;
+using AluLab.Common.Views;
 
 namespace AluLab.Workbench.Services;
 
@@ -51,9 +51,13 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 	private HousingView? _housingView;
 
 	/// <summary>
-	/// Attaches the service to a window, sets up rendering and touch polling.
+	/// Attaches the specified window to the display service, initializing rendering and event handling for the window.
 	/// </summary>
-	/// <param name="window">The Avalonia window to attach to.</param>
+	/// <remarks>If the window is already attached, this method has no effect. The method ensures that the image
+	/// factory is registered before initializing rendering. When the attached window is closed, resources are
+	/// automatically disposed.</remarks>
+	/// <param name="window">The window to attach. This parameter must not be null and will be used for rendering output and managing window
+	/// events.</param>
 	public void Attach( Window window )
 	{
 		if( _isAttached )
@@ -69,7 +73,6 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 
 		_window = window;
 		_window.Closed += ( _, _ ) => Dispose();
-		_window.SizeChanged += OnWindowSizeChanged;
 
 		_housingView = _window.FindControl<HousingView>( "HousingControl" ) ?? _window.Content as HousingView;
 
@@ -86,8 +89,10 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 	}
 
 	/// <summary>
-	/// Timer callback for rendering and touch polling.
+	/// Performs a single update cycle for the display service, including rendering and processing user interface input.
 	/// </summary>
+	/// <remarks>Call this method at regular intervals to ensure the display remains up to date and responsive to
+	/// user interactions. This method is typically invoked by a timer or main application loop.</remarks>
 	private void Tick()
 	{
 		RenderAndSend();
@@ -95,8 +100,14 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 	}
 
 	/// <summary>
-	/// Renders the <see cref="HousingView"/> and sends the bitmap to the board's display.
+	/// Renders the housing view and transmits the resulting bitmap to the display board if all required components are
+	/// initialized and available.
 	/// </summary>
+	/// <remarks>This method measures and arranges the housing view before rendering it to a bitmap and sending it
+	/// to the display board. If the housing view, render target, or display board is not properly initialized, the method
+	/// exits without performing any action. Any exceptions encountered during rendering or transmission are caught and
+	/// logged as warnings. This method should be called only when the display infrastructure is fully
+	/// initialized.</remarks>
 	private void RenderAndSend()
 	{
 		if( _housingView is null || _rtb is null )
@@ -127,16 +138,16 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 		}
 	}
 
-	/// <summary>
-	/// Handles window size changes. Currently a placeholder.
-	/// </summary>
-	private void OnWindowSizeChanged( object? sender, SizeChangedEventArgs e )
-	{
-	}
 
 	/// <summary>
-	/// Polls the board's touch controller and dispatches touch events to the UI.
+	/// Polls the touch controller for touch events and dispatches corresponding actions to the UI thread when a touch is
+	/// detected or released.
 	/// </summary>
+	/// <remarks>This method checks for touch input from the board's touch controller and, upon detecting a touch
+	/// release, posts a UI update to process the touch event at the last known position. If the touch controller is not
+	/// initialized or an error occurs while polling for touch status or position, the method logs the error and exits
+	/// without further action. This method is intended to be called periodically to ensure timely UI updates in response
+	/// to user touch interactions.</remarks>
 	private void PollTouchAndDispatchToUi()
 	{
 		if( _window is null )
@@ -203,23 +214,27 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 	}
 
 	/// <summary>
-	/// Maps display coordinates to the <see cref="HousingView"/> coordinate space.
+	/// Maps the specified display coordinates to the corresponding point within the given HousingView.
 	/// </summary>
-	/// <param name="hv">The housing view to map to.</param>
-	/// <param name="x">X coordinate from the display.</param>
-	/// <param name="y">Y coordinate from the display.</param>
-	/// <returns>Mapped <see cref="Point"/> in the housing view.</returns>
+	/// <remarks>This method calculates the position of the HousingView relative to the window and adjusts the
+	/// provided display coordinates based on the effective area of the HousingView. If the window or the translation point
+	/// is unavailable, the method returns the default Point.</remarks>
+	/// <param name="hv">The HousingView instance that defines the target area for coordinate mapping. Cannot be null.</param>
+	/// <param name="x">The x-coordinate in display space to be mapped to the HousingView.</param>
+	/// <param name="y">The y-coordinate in display space to be mapped to the HousingView.</param>
+	/// <returns>A Point representing the mapped coordinates within the HousingView. Returns the default Point if the mapping cannot
+	/// be performed.</returns>
 	private Point MapDisplayToHousingView( HousingView hv, int x, int y )
 	{
 		if( _window is null )
 			return default;
 
-		// Top-left des HousingView relativ zum Window
+		// Top left of the HousingView relative to the window
 		var tl = hv.TranslatePoint( new Point( 0, 0 ), _window );
 		if( !tl.HasValue )
 			return default;
 
-		// Effektive Fläche, in die das HousingView gerendert wird (DIPs)
+		// Effective area into which HousingView is rendered (DIPs)
 		double targetWidth = Math.Max( 1.0, hv.Bounds.Width );
 		double targetHeight = Math.Max( 1.0, hv.Bounds.Height );
 
@@ -230,8 +245,10 @@ public sealed class DisplayService( IBoardProvider boardProvider, ILogger<Displa
 	}
 
 	/// <summary>
-	/// Cleans up resources and detaches from the window.
+	/// Releases all resources used by the current instance of the class.
 	/// </summary>
+	/// <remarks>Call this method when the instance is no longer needed to free unmanaged resources and perform
+	/// other cleanup operations. After calling this method, the instance should not be used.</remarks>
 	public void Dispose()
 	{
 		try { _timer?.Stop(); } catch { }

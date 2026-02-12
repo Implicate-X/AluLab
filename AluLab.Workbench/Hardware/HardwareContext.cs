@@ -55,10 +55,47 @@ public sealed class HardwareContext : IBoardHardwareContext
 		TouchGpio = _serialBus.ChannelSpiTouch.CreateGpioController();
 	}
 
+	/// <summary>
+	/// Gets the I2C bus interface used to communicate with connected I2C devices.
+	/// </summary>
+	/// <remarks>Use this property to access the I2C bus for data transfer operations. Ensure that the bus is
+	/// properly initialized before performing any communication. The returned interface provides methods for interacting
+	/// with devices on the I2C bus.</remarks>
 	public I2cBus I2cBus { get; }
+	
+	/// <summary>
+	/// Gets the GPIO controller used to manage the I2C lines.
+	/// </summary>
+	/// <remarks>Use this property to access the underlying GPIO controller responsible for configuring and
+	/// controlling the I2C communication lines. Ensure that the controller is properly initialized before performing I2C
+	/// operations.</remarks>
 	public GpioController I2cLinesGpio { get; }
+	
+	/// <summary>
+	/// Gets the SPI device used for display operations.
+	/// </summary>
+	/// <remarks>This property provides access to the underlying SPI device that is responsible for handling display
+	/// communications. Ensure that the device is properly initialized before use.</remarks>
 	public SpiDevice DisplaySpi { get; }
+	
+	/// <summary>
+	/// Gets the GPIO controller used for display operations.
+	/// </summary>
+	/// <remarks>This property provides access to the GPIO controller that manages the display's GPIO pins, allowing
+	/// for configuration and control of display-related functionalities.</remarks>
 	public GpioController DisplayGpio { get; }
+	
+	/// <summary>
+	/// Gets the SPI device used for communication with the touch sensor.
+	/// </summary>
+	/// <remarks>Access this property to interact directly with the underlying SPI device responsible for touch
+	/// input operations. Ensure that the device is properly initialized before use.</remarks>
 	public SpiDevice TouchSpi { get; }
+	
+	/// <summary>
+	/// Gets the GPIO controller used for touch input operations.
+	/// </summary>
+	/// <remarks>This property provides access to the underlying GPIO controller, which is essential for managing
+	/// touch input devices. Ensure that the GPIO controller is properly initialized before use.</remarks>
 	public GpioController TouchGpio { get; }
 }
