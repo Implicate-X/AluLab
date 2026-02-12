@@ -48,11 +48,11 @@ namespace AluLab.Common.ViewModels
 
 		private readonly IAsyncRelayCommand _connectCommand;
 		private readonly IAsyncRelayCommand _disconnectCommand;
-		private readonly IAsyncRelayCommand _sendTestCommand;
+		//private readonly IAsyncRelayCommand _sendTestCommand;
 
 		public IAsyncRelayCommand ConnectCommand => _connectCommand;
 		public IAsyncRelayCommand DisconnectCommand => _disconnectCommand;
-		public IAsyncRelayCommand SendTestCommand => _sendTestCommand;
+		//public IAsyncRelayCommand SendTestCommand => _sendTestCommand;
 
 		public HousingViewModel( SyncService service )
 		{
@@ -63,7 +63,7 @@ namespace AluLab.Common.ViewModels
 
 			_connectCommand = new AsyncRelayCommand( ConnectImplAsync );
 			_disconnectCommand = new AsyncRelayCommand( DisconnectImplAsync );
-			_sendTestCommand = new AsyncRelayCommand( SendTestImplAsync );
+			//_sendTestCommand = new AsyncRelayCommand( SendTestImplAsync );
 		}
 
 		private async Task ConnectImplAsync()
@@ -124,7 +124,6 @@ namespace AluLab.Common.ViewModels
 			{
 				// Da SyncService keine SendMessageAsync-Methode besitzt,
 				// muss hier eine alternative Methode genutzt werden.
-				// Bitte passen Sie den Code entsprechend Ihrer Implementierung an.
 
 				AddLog( $"Sent: {payload}" );
 			}

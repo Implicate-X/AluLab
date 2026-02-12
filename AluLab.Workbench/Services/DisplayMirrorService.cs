@@ -31,6 +31,8 @@ public sealed class DisplayMirrorService : IDisposable
 	private int _lastX = -1;
 	private int _lastY = -1;
 
+	private HousingView? _housingView;
+
 	public DisplayMirrorService( IBoardProvider boardProvider, ILogger<DisplayMirrorService> logger )
 	{
 		_boardProvider = boardProvider;
@@ -52,6 +54,12 @@ public sealed class DisplayMirrorService : IDisposable
 
 		_window = window;
 		_window.Closed += ( _, _ ) => Dispose();
+		_window.SizeChanged += OnWindowSizeChanged;
+
+		_housingView = _window.FindControl<HousingView>( "HousingControl" ) ?? _window.Content as HousingView;
+
+		if( _housingView is null )
+			return;
 
 		_rtb = new RenderTargetBitmap( new PixelSize( DisplayWidth, DisplayHeight ), new Vector( 96, 96 ) );
 
@@ -70,7 +78,7 @@ public sealed class DisplayMirrorService : IDisposable
 
 	private void RenderAndSend()
 	{
-		if( _window is null || _rtb is null )
+		if( _housingView is null || _rtb is null )
 			return;
 
 		if( !_boardProvider.TryGetBoard( out var board, out _ ) || board is null || !board.IsInitialized )
@@ -78,10 +86,10 @@ public sealed class DisplayMirrorService : IDisposable
 
 		try
 		{
-			var hv = _window.FindControl<HousingView>( "Root" ) ?? _window.Content as HousingView;
-			var renderRoot = (Control?)hv ?? _window;
+			_housingView.Measure( new Size( DisplayWidth, DisplayHeight ) );
+			_housingView.Arrange( new Rect( 0, 0, DisplayWidth, DisplayHeight ) );
 
-			_rtb.Render( renderRoot );
+			_rtb.Render( _housingView );
 
 			using var stream = new MemoryStream();
 			_rtb.Save( stream );
@@ -96,6 +104,10 @@ public sealed class DisplayMirrorService : IDisposable
 		{
 			_logger.LogWarning( ex, "DisplayMirror: RenderAndSend failed." );
 		}
+	}
+
+	private void OnWindowSizeChanged( object? sender, SizeChangedEventArgs e )
+	{
 	}
 
 	private void PollTouchAndDispatchToUi()

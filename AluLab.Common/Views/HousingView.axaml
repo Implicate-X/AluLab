@@ -4,7 +4,7 @@
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
 			 x:Class="AluLab.Common.Views.HousingView"
-			 x:Name="Root"
+			 x:Name="HousingControl"
 			 x:DataType="vm:HousingViewModel"
 			 Background="White"
 			 HorizontalAlignment="Stretch"
@@ -505,7 +505,7 @@
 					<Ellipse Name="CN4" Classes="pin"/>
 				</StackPanel>
 
-				<Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
+				<Border IsVisible="{Binding #HousingControl.IsLogOverlayVisible}"
 						Background="#CC000000"
 						CornerRadius="6"
 						Padding="8"
@@ -517,11 +517,11 @@
 							 IsReadOnly="True"
 							 AcceptsReturn="True"
 							 TextWrapping="Wrap"
-							 Text="{Binding #Root.LogsText}" />
+							 Text="{Binding #HousingControl.LogsText}" />
 				</Border>
 
 				<!-- Log-Overlay (ALULAB_LOGOVERLAY must be defined) -->
-				<Border IsVisible="{Binding #Root.IsLogOverlayVisible}"
+				<Border IsVisible="{Binding #HousingControl.IsLogOverlayVisible}"
 						Background="#AA000000"
 						CornerRadius="6"
 						Padding="8"
@@ -532,7 +532,7 @@
 						Margin="25,0,0,25"
 						ZIndex="1000">
 					<ScrollViewer>
-						<TextBlock Text="{Binding #Root.LogsText}"
+						<TextBlock Text="{Binding #HousingControl.LogsText}"
 								   Foreground="White"
 								   FontFamily="Consolas"
 								   FontSize="11"

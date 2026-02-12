@@ -87,7 +87,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 
 		Debug.WriteLine( $"ConnectCommand is null? {_viewModel?.ConnectCommand == null}" );
 		Debug.WriteLine( $"DisconnectCommand is null? {_viewModel?.DisconnectCommand == null}" );
-		Debug.WriteLine( $"SendTestCommand is null? {_viewModel?.SendTestCommand == null}" );
+		//Debug.WriteLine( $"SendTestCommand is null? {_viewModel?.SendTestCommand == null}" );
 
 		DetachedFromVisualTree += async ( _, __ ) =>
 		{
