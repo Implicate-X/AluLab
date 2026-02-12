@@ -13,7 +13,7 @@ namespace AluLab.Workbench.Hardware;
 /// <remarks>This context initializes and exposes the hardware interfaces necessary for display and touch device
 /// communication. All interfaces are ready for use after construction. If the required hardware is not connected or the
 /// FTDI SerialBus cannot be initialized, an exception is thrown during instantiation.</remarks>
-public sealed class WorkbenchHardwareContext : IBoardHardwareContext
+public sealed class HardwareContext : IBoardHardwareContext
 {
 	private readonly SerialBus _serialBus = new();
 
@@ -25,7 +25,7 @@ public sealed class WorkbenchHardwareContext : IBoardHardwareContext
 	/// and touch hardware. All hardware interfaces are initialized and ready for use after construction. If the hardware is
 	/// not connected or the FTDI SerialBus cannot be initialized, construction will fail with an exception.</remarks>
 	/// <exception cref="InvalidOperationException">Thrown if the underlying FTDI SerialBus fails to initialize.</exception>
-	public WorkbenchHardwareContext()
+	public HardwareContext()
 	{
 		if( !_serialBus.Initialize() )
 			throw new InvalidOperationException( "FTDI SerialBus initialization failed." );

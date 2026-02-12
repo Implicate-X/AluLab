@@ -1,9 +1,23 @@
+// Program.cs
+//
+// Entry point for the AluLab.Server application.
+// This file configures and starts the ASP.NET Core web application, sets up SignalR for real-time communication,
+// configures CORS, and defines several HTTP endpoints for monitoring and debugging the SyncHub state.
+//
+// Key Features:
+// - SignalR hub at /sync for real-time pin state updates and event broadcasting.
+// - CORS policy allowing any origin, header, and method, with credentials support.
+// - Endpoints for retrieving current pin state (/sync/state), hub info (/sync/info), and available routes (/debug/routes).
+// - HTML-based live monitor at /sync/monitor, which displays the current pin snapshot and recent events, and subscribes to live updates via SignalR.
+// - HubInvocationLogFilter logs all SignalR hub method invocations and failures for monitoring and debugging purposes.
+
 using System.Text;
 using AluLab.Common.Relay;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder( args );
 
+// Configure SignalR with a custom invocation log filter and JSON protocol settings.
 builder.Services
 	.AddSignalR( options =>
 	{
@@ -15,8 +29,10 @@ builder.Services
 		options.PayloadSerializerOptions.DictionaryKeyPolicy = null;
 	} );
 
+// Register the custom SignalR invocation log filter as a singleton.
 builder.Services.AddSingleton<HubInvocationLogFilter>();
 
+// Configure CORS to allow any origin, header, and method, with credentials.
 builder.Services.AddCors( options =>
 {
 	options.AddDefaultPolicy( policy =>
@@ -31,22 +47,29 @@ builder.Services.AddCors( options =>
 
 var app = builder.Build();
 
+// Initialize SyncHub state on startup.
 _ = SyncHub.GetSnapshot();
 
 app.UseHttpsRedirection();
 app.UseCors();
 
+// Map the SignalR hub for real-time pin state updates.
 app.MapHub<SyncHub>( "/sync" ).RequireCors();
 
+// Endpoint: Returns the current pin state as JSON.
 app.MapGet( "/sync/state", () =>
 {
 	var copy = SyncHub.GetSnapshot();
 	return Results.Json( new SyncState( copy ) );
 } ).RequireCors();
 
+// Endpoint: Returns a simple info message about the SignalR hub.
 app.MapGet( "/sync/info", () => "Sync hub is available at /sync for SignalR clients (new++)." );
+
+// Endpoint: Returns a basic status message with the current server time.
 app.MapGet( "/", () => "AluLab IoT " + DateTime.Now.ToString() );
 
+// Endpoint: Returns a list of all registered routes for debugging purposes.
 app.MapGet( "/debug/routes", ( EndpointDataSource ds ) =>
 {
 	var sb = new StringBuilder();
@@ -57,13 +80,14 @@ app.MapGet( "/debug/routes", ( EndpointDataSource ds ) =>
 	return Results.Text( sb.ToString(), "text/plain; charset=utf-8" );
 } );
 
-// Monitor: liefert initiale Liste und subscribes via SignalR JS client für Live-Updates
+// Endpoint: Serves an HTML page for live monitoring of pin states and events via SignalR.
+// The page displays the current snapshot and recent events, and subscribes to live updates.
 app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 {
 	var recent = SyncHub.GetRecent( 200 );
 	var snapshot = SyncHub.GetSnapshot();
 
-	// pre-allocate grob, damit weniger Reallocs beim Zusammenbauen passieren
+	// Pre-allocate StringBuilder for efficient HTML generation.
 	var sb = new StringBuilder( 16 * 1024 );
 
 	sb.Append( @"<!doctype html>
@@ -98,7 +122,7 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 	foreach( var e in recent )
 		sb.Append( System.Net.WebUtility.HtmlEncode( e ) + "\n" );
 
-	// IMPORTANT: Close #log , sonst landet das <script> im Log-Container und wird als Text sichtbar
+	// IMPORTANT: Close #log, otherwise the <script> will end up in the log container and become visible as text.
 	sb.Append( @"</div>
 
   <script src=""https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.7/dist/browser/signalr.min.js""></script>
@@ -146,8 +170,12 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 	return Results.Content( sb.ToString(), "text/html; charset=utf-8" );
 } );
 
+// Start the web application.
 app.Run();
 
+/// <summary>
+/// SignalR hub filter that logs all hub method invocations and failures to the SyncHub event log.
+/// </summary>
 internal sealed class HubInvocationLogFilter : IHubFilter
 {
 	public async ValueTask<object?> InvokeMethodAsync(

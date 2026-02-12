@@ -76,7 +76,7 @@ sealed class Program
 	/// <item><description> <c>ConfigureHostServices</c>: Registers the required services in the DI container, in particular:
 	/// <list type="bullet">
 	/// <item><description>Logging via <c>Microsoft.Extensions.Logging</c> with Serilog as the provider (providers are cleaned up beforehand).</description></item>
-	/// <item><description><see cref="IBoardHardwareContext"/> → <see cref="WorkbenchHardwareContext"/> (singleton).</description></item>
+	/// <item><description><see cref="IBoardHardwareContext"/> → <see cref="HardwareContext"/> (singleton).</description></item>
 	/// <item><description><see cref="IBoardProvider"/> → <see cref="BoardProvider"/> (singleton).</description></item>
 	/// </list>
 	/// </description></item>
@@ -103,7 +103,7 @@ sealed class Program
 							lb.AddSerilog( Log.Logger, dispose: false );
 						} );
 
-						services.AddSingleton<IBoardHardwareContext, WorkbenchHardwareContext>();
+						services.AddSingleton<IBoardHardwareContext, HardwareContext>();
 						services.AddSingleton<IBoardProvider, BoardProvider>();
 						services.AddSingleton<DisplayService>();
 					};

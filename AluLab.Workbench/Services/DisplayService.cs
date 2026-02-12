@@ -12,15 +12,32 @@ using Iot.Device.Graphics.SkiaSharpAdapter;
 
 namespace AluLab.Workbench.Services;
 
-public sealed class DisplayService : IDisposable
+/// <summary>
+/// Provides a service for mirroring the UI display to a hardware board display and handling touch input.
+/// </summary>
+/// <param name="boardProvider">Provider for accessing the hardware board.</param>
+/// <param name="logger">Logger for diagnostic messages.</param>
+/// <remarks>
+/// <para>
+/// The <see cref="DisplayService"/> manages rendering a <see cref="HousingView"/> to a bitmap, sending it to the board's display,
+/// and polling for touch input from the board's touch controller. It maps touch coordinates to the UI and dispatches them accordingly.
+/// </para>
+/// <para>
+/// - Uses Avalonia for UI rendering.
+/// - Integrates with hardware via <see cref="IBoardProvider"/>.
+/// - Handles display updates and touch events at a 10ms interval.
+/// - Ensures image factory registration for bitmap conversion.
+/// </para>
+/// </remarks>
+public sealed class DisplayService( IBoardProvider boardProvider, ILogger<DisplayService> logger ) : IDisposable
 {
 	private const int DisplayWidth = 480;
 	private const int DisplayHeight = 320;
 
 	private static bool s_imageFactoryRegistered;
 
-	private readonly IBoardProvider _boardProvider;
-	private readonly ILogger<DisplayService> _logger;
+	private readonly IBoardProvider _boardProvider = boardProvider;
+	private readonly ILogger<DisplayService> _logger = logger;
 
 	private Window? _window;
 	private RenderTargetBitmap? _rtb;
@@ -33,12 +50,10 @@ public sealed class DisplayService : IDisposable
 
 	private HousingView? _housingView;
 
-	public DisplayService( IBoardProvider boardProvider, ILogger<DisplayService> logger )
-	{
-		_boardProvider = boardProvider;
-		_logger = logger;
-	}
-
+	/// <summary>
+	/// Attaches the service to a window, sets up rendering and touch polling.
+	/// </summary>
+	/// <param name="window">The Avalonia window to attach to.</param>
 	public void Attach( Window window )
 	{
 		if( _isAttached )
@@ -70,12 +85,18 @@ public sealed class DisplayService : IDisposable
 		_logger.LogInformation( "DisplayMirror: attached (render {Width}x{Height}).", DisplayWidth, DisplayHeight );
 	}
 
+	/// <summary>
+	/// Timer callback for rendering and touch polling.
+	/// </summary>
 	private void Tick()
 	{
 		RenderAndSend();
 		PollTouchAndDispatchToUi();
 	}
 
+	/// <summary>
+	/// Renders the <see cref="HousingView"/> and sends the bitmap to the board's display.
+	/// </summary>
 	private void RenderAndSend()
 	{
 		if( _housingView is null || _rtb is null )
@@ -106,10 +127,16 @@ public sealed class DisplayService : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Handles window size changes. Currently a placeholder.
+	/// </summary>
 	private void OnWindowSizeChanged( object? sender, SizeChangedEventArgs e )
 	{
 	}
 
+	/// <summary>
+	/// Polls the board's touch controller and dispatches touch events to the UI.
+	/// </summary>
 	private void PollTouchAndDispatchToUi()
 	{
 		if( _window is null )
@@ -175,6 +202,13 @@ public sealed class DisplayService : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Maps display coordinates to the <see cref="HousingView"/> coordinate space.
+	/// </summary>
+	/// <param name="hv">The housing view to map to.</param>
+	/// <param name="x">X coordinate from the display.</param>
+	/// <param name="y">Y coordinate from the display.</param>
+	/// <returns>Mapped <see cref="Point"/> in the housing view.</returns>
 	private Point MapDisplayToHousingView( HousingView hv, int x, int y )
 	{
 		if( _window is null )
@@ -195,6 +229,9 @@ public sealed class DisplayService : IDisposable
 		return new Point( mappedX, mappedY );
 	}
 
+	/// <summary>
+	/// Cleans up resources and detaches from the window.
+	/// </summary>
 	public void Dispose()
 	{
 		try { _timer?.Stop(); } catch { }
