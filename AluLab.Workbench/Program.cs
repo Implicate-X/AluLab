@@ -105,7 +105,7 @@ sealed class Program
 
 						services.AddSingleton<IBoardHardwareContext, WorkbenchHardwareContext>();
 						services.AddSingleton<IBoardProvider, BoardProvider>();
-						services.AddSingleton<DisplayMirrorService>();
+						services.AddSingleton<DisplayService>();
 					};
 
 					app.AfterHostServicesBuilt = sp =>
@@ -158,7 +158,7 @@ sealed class Program
 					{
 						try
 						{
-							var mirror = app.Services.GetRequiredService<DisplayMirrorService>();
+							var mirror = app.Services.GetRequiredService<DisplayService>();
 							mirror.Attach( window );
 						}
 						catch( Exception ex )

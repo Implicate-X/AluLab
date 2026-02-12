@@ -12,7 +12,7 @@ using Iot.Device.Graphics.SkiaSharpAdapter;
 
 namespace AluLab.Workbench.Services;
 
-public sealed class DisplayMirrorService : IDisposable
+public sealed class DisplayService : IDisposable
 {
 	private const int DisplayWidth = 480;
 	private const int DisplayHeight = 320;
@@ -20,7 +20,7 @@ public sealed class DisplayMirrorService : IDisposable
 	private static bool s_imageFactoryRegistered;
 
 	private readonly IBoardProvider _boardProvider;
-	private readonly ILogger<DisplayMirrorService> _logger;
+	private readonly ILogger<DisplayService> _logger;
 
 	private Window? _window;
 	private RenderTargetBitmap? _rtb;
@@ -33,7 +33,7 @@ public sealed class DisplayMirrorService : IDisposable
 
 	private HousingView? _housingView;
 
-	public DisplayMirrorService( IBoardProvider boardProvider, ILogger<DisplayMirrorService> logger )
+	public DisplayService( IBoardProvider boardProvider, ILogger<DisplayService> logger )
 	{
 		_boardProvider = boardProvider;
 		_logger = logger;
