@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- Linux -->
     <OutputType>Exe</OutputType>
-
+    <PublishTrimmed>false</PublishTrimmed>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -20,6 +20,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <!--<PackageReference Include="SkiaSharp.NativeAssets.Linux" />-->
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\AluLab.Board\AluLab.Board.csproj" />
     <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
