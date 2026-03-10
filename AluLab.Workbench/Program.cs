@@ -6,9 +6,9 @@ using Avalonia;
 using Serilog;
 using Serilog.Events;
 using AluLab.Common;
+using AluLab.Board.Services;
 using AluLab.Board.Platform;
 using AluLab.Workbench.Hardware;
-using AluLab.Workbench.Services;
 
 namespace AluLab.Workbench;
 

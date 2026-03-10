@@ -18,10 +18,16 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Seq" />    
   </ItemGroup>
 
-  <ItemGroup>
-    <!--<PackageReference Include="SkiaSharp.NativeAssets.Linux" />-->
+  <ItemGroup><!--<PackageReference Include="SkiaSharp.NativeAssets.Linux" />-->
+  
+    <AvaloniaXaml Remove="publish-test\**" />
+    <Compile Remove="publish-test\**" />
+    <EmbeddedResource Remove="publish-test\**" />
+    <None Remove="publish-test\**" />
   </ItemGroup>
   
   <ItemGroup>

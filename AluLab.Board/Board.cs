@@ -45,7 +45,7 @@ namespace AluLab.Board
 		private const int PIN_LED = 6;
 
 		private const int PIN_V2_INTB = 4; // AD4
-		private const int PIN_V2_INTA = 5; // AD5 (Touch)
+		private const int PIN_V2_INTA = 5; // AD5
 		private const int PIN_V1_RESET = 6; // AD6
 		private const int PIN_V2_RESET = 7; // AD7
 
@@ -59,7 +59,7 @@ namespace AluLab.Board
 		private V2SignalInpALU? _v2SignalInpALU;
 		private AluController? _aluController;
 		private St7796s? _display;
-		private XPT2046Touch? touchController;
+		private XPT2046Touch? _touchController;
 
 		private protected InputService _touchInputService = new();
 
@@ -128,7 +128,7 @@ namespace AluLab.Board
 		/// <exception cref="InvalidOperationException">
 		/// If the board is not initialized (see <see cref="EnsureInitialized"/>).
 		/// </exception>
-		public XPT2046Touch TouchController { get { EnsureInitialized(); return touchController!; } private set => touchController = value; }
+		public XPT2046Touch TouchController { get { EnsureInitialized(); return _touchController!; } private set => _touchController = value; }
 
 		/// <summary>
 		/// Service for processing/forwarding touch inputs.
@@ -361,9 +361,9 @@ namespace AluLab.Board
 			_display = new( _hw.DisplaySpi, PIN_DC, PIN_RESET, backlightPin: PIN_LED, gpioController: _hw.DisplayGpio );
 			_display.Initialize();
 
-			touchController = new XPT2046Touch( _hw.TouchSpi );
+			_touchController = new XPT2046Touch( _hw.TouchSpi );
 
-			return _display != null && touchController != null;
+			return _display != null && _touchController != null;
 		}
 
 		/// <summary>
@@ -439,7 +439,14 @@ namespace AluLab.Board
 			Span<byte> write = stackalloc byte[ 1 ] { 0x0A }; // IOCON
 			Span<byte> read = stackalloc byte[ 1 ];
 
-			dev.WriteRead( write, read );
+			try
+			{
+				dev.WriteRead( write, read );
+			}
+			
+			catch( Exception ex )
+			{
+			}
 			return true;
 		}
 	}

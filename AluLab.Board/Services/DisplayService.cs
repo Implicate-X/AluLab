@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
@@ -10,7 +8,7 @@ using Iot.Device.Graphics.SkiaSharpAdapter;
 using AluLab.Board.Platform;
 using AluLab.Common.Views;
 
-namespace AluLab.Workbench.Services;
+namespace AluLab.Board.Services;
 
 /// <summary>
 /// Provides a service for mirroring the UI display to a hardware board display and handling touch input.
