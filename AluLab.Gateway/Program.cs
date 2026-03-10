@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Avalonia;
@@ -14,29 +14,19 @@ using AluLab.Gateway.Hardware;
 
 namespace AluLab.Gateway;
 
-/// <summary>
-/// Provides the application entry point and configuration methods for initializing and starting the Avalonia
-/// application.
-/// </summary>
-/// <remarks>
-/// This class is not intended to be instantiated. It contains static methods for setting up the Avalonia
-/// application with recommended defaults and launching it with a classic desktop lifetime. The class is sealed to
-/// prevent inheritance.
-/// Remote start on Raspberry Pi 4B:
-/// ssh iotuser@iot-gateway "DISPLAY=:0 nohup /opt/dotnet/dotnet Projects/AluLab/AluLab.Gateway.dll"
-/// 
-/// </remarks>
 sealed class Program
 {
+	private static readonly TimeSpan DefaultDebuggerWaitTimeout = TimeSpan.FromSeconds( 60 );
+
 	static void ConfigureLogging()
 	{
-		var logPath = Path.Combine( AppContext.BaseDirectory, "workbench.log" );
+		var logPath = Path.Combine( AppContext.BaseDirectory, "gateway.log" );
 
 		Log.Logger = new LoggerConfiguration()
 			.MinimumLevel.Debug()
 			.MinimumLevel.Override( "Microsoft", LogEventLevel.Information )
 			.MinimumLevel.Override( "System", LogEventLevel.Information )
-			.Enrich.WithProperty( "Application", "AluLab.Workbench" )
+			.Enrich.WithProperty( "Application", "AluLab.Gateway" )
 			.Enrich.WithProperty( "Environment", "Development" )
 			.WriteTo.Debug()
 			.WriteTo.File(
@@ -49,24 +39,111 @@ sealed class Program
 			.CreateLogger();
 	}
 
-	[DllImport( "libgtk-3.so.0" )]
-	private static extern void gtk_init( ref int argc, ref IntPtr argv );
+	static void WaitForDebuggerIfRequested( string[] args )
+	{
+#if DEBUG
+		if( !TryGetDebuggerWaitTimeout( args, out var timeout ) )
+			return;
 
-	[DllImport( "libgtk-3.so.0" )]
-	private static extern IntPtr gtk_message_dialog_new(
-		IntPtr parent,
-		uint flags,
-		int type,
-		int buttons,
-		string message
-	);
+		// Wenn bereits attached (z.B. per Reattach), direkt breaken.
+		if( Debugger.IsAttached )
+		{
+			Debugger.Break();
+			return;
+		}
 
-	[DllImport( "libgtk-3.so.0" )]
-	private static extern int gtk_dialog_run( IntPtr raw );
+		Log.Information(
+			"Waiting for debugger attach... PID={Pid} Timeout={Timeout} (use --wait-for-debugger[=seconds] or ALULAB_WAIT_FOR_DEBUGGER=[1|seconds])",
+			Environment.ProcessId,
+			timeout == Timeout.InfiniteTimeSpan ? "infinite" : timeout );
 
-	[DllImport( "libgtk-3.so.0" )]
-	private static extern void gtk_widget_destroy( IntPtr widget );
+		var sw = Stopwatch.StartNew();
+		while( !Debugger.IsAttached )
+		{
+			if( timeout != Timeout.InfiniteTimeSpan && sw.Elapsed >= timeout )
+			{
+				Log.Warning( "Debugger wait timed out after {Timeout}. Continuing startup.", timeout );
+				return;
+			}
 
+			Thread.Sleep( 200 );
+		}
+
+		Log.Information( "Debugger attached." );
+		Debugger.Break();
+#endif
+	}
+
+	static bool TryGetDebuggerWaitTimeout( string[] args, out TimeSpan timeout )
+	{
+		timeout = default;
+
+		// Arg: --wait-for-debugger OR --wait-for-debugger=60
+		foreach( var a in args )
+		{
+			if( string.Equals( a, "--wait-for-debugger", StringComparison.OrdinalIgnoreCase ) )
+			{
+				timeout = DefaultDebuggerWaitTimeout;
+				return true;
+			}
+
+			const string prefix = "--wait-for-debugger=";
+			if( a.StartsWith( prefix, StringComparison.OrdinalIgnoreCase ) )
+			{
+				var value = a.Substring( prefix.Length ).Trim();
+
+				if( string.IsNullOrWhiteSpace( value ) )
+				{
+					timeout = DefaultDebuggerWaitTimeout;
+					return true;
+				}
+
+				if( TryParseTimeoutSeconds( value, out timeout ) )
+					return true;
+
+				Log.Warning( "Invalid value for {Arg}. Using default timeout {Timeout}.", a, DefaultDebuggerWaitTimeout );
+				timeout = DefaultDebuggerWaitTimeout;
+				return true;
+			}
+		}
+
+		// Env: ALULAB_WAIT_FOR_DEBUGGER=1 OR =60
+		var env = Environment.GetEnvironmentVariable( "ALULAB_WAIT_FOR_DEBUGGER" )?.Trim();
+		if( string.IsNullOrWhiteSpace( env ) )
+			return false;
+
+		if( string.Equals( env, "1", StringComparison.OrdinalIgnoreCase ) )
+		{
+			timeout = DefaultDebuggerWaitTimeout;
+			return true;
+		}
+
+		if( TryParseTimeoutSeconds( env, out timeout ) )
+			return true;
+
+		Log.Warning( "Invalid value for ALULAB_WAIT_FOR_DEBUGGER='{Value}'. Ignoring.", env );
+		return false;
+	}
+
+	static bool TryParseTimeoutSeconds( string value, out TimeSpan timeout )
+	{
+		timeout = default;
+
+		if( string.Equals( value, "infinite", StringComparison.OrdinalIgnoreCase ) ||
+			string.Equals( value, "inf", StringComparison.OrdinalIgnoreCase ) ||
+			string.Equals( value, "none", StringComparison.OrdinalIgnoreCase ) ||
+			string.Equals( value, "0", StringComparison.OrdinalIgnoreCase ) )
+		{
+			timeout = Timeout.InfiniteTimeSpan;
+			return true;
+		}
+
+		if( !int.TryParse( value, out int seconds ) || seconds < 0 )
+			return false;
+
+		timeout = TimeSpan.FromSeconds( seconds );
+		return true;
+	}
 
 	public static AppBuilder BuildAvaloniaApp()
 		=> AppBuilder.Configure<App>()
@@ -152,32 +229,11 @@ sealed class Program
 				}
 			} );
 
-	/// <summary>
-	/// Initializes and starts the application with a classic desktop lifetime using the specified command-line arguments.
-	/// </summary>
-	/// <param name="args">An array of command-line arguments to pass to the application on startup.</param>
 	[STAThread]
 	public static void Main( string[] args )
 	{
-#if DEBUG
-		int argc = 0;
-		IntPtr argv = IntPtr.Zero;
-
-		gtk_init( ref argc, ref argv );
-
-		IntPtr dialog = gtk_message_dialog_new(
-			IntPtr.Zero,
-			0,
-			0, // GTK_MESSAGE_INFO
-			1, // GTK_BUTTONS_OK
-			"Attach Debugger in Visual Studio ..."
-		);
-
-		gtk_dialog_run( dialog );
-		gtk_widget_destroy( dialog );
-#endif
-
 		ConfigureLogging();
+		WaitForDebuggerIfRequested( args );
 
 		try
 		{
