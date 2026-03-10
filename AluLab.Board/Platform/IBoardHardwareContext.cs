@@ -8,12 +8,15 @@ namespace AluLab.Board.Platform;
 /// Provides access to the board's hardware resources (I2C/SPI/GPIO) provided by host projects (e.g., Workbench/Gateway).
 /// </summary>
 /// <remarks>
-/// <para> This interface does not create or manage any hardware resources and, in particular, does not
+/// <para>
 /// This interface does not create or manage any hardware resources and, in particular, does not
 /// <see cref="System.IDisposable.Dispose"/> any of these resources. The lifetime (creation,
-/// configuration, release) remains entirely with the host; <c>AluLab.Board</c> only consumes the dependencies via DI. </para>
-/// <para> The individual controllers/devices are typically preconfigured 
-/// so that they are assigned to the respective bus/GPIO lines for display and touch. </para>
+/// configuration, release) remains entirely with the host; <c>AluLab.Board</c> only consumes the dependencies via DI.
+/// </para>
+/// <para>
+/// Pin assignments are host-specific and must be provided by the host implementation (Workbench: FTDI pin indices,
+/// Gateway: Raspberry Pi BCM pins).
+/// </para>
 /// </remarks>
 public interface IBoardHardwareContext
 {
@@ -23,8 +26,7 @@ public interface IBoardHardwareContext
 	I2cBus I2cBus { get; }
 
 	/// <summary>
-	/// GPIO controller for I2C-related lines (e.g., reset/power/enable or multiplexing),
-	/// unless these are mapped exclusively via the <see cref="I2cBus"/>.
+	/// GPIO controller for I2C-related lines (expander reset/interrupt lines).
 	/// </summary>
 	GpioController I2cLinesGpio { get; }
 
@@ -34,8 +36,7 @@ public interface IBoardHardwareContext
 	SpiDevice DisplaySpi { get; }
 
 	/// <summary>
-	/// GPIO controller for display-related signals (e.g., D/C, reset, backlight, chip select),
-	/// unless covered by <see cref="DisplaySpi"/>.
+	/// GPIO controller for display-related signals (D/C, reset, backlight).
 	/// </summary>
 	GpioController DisplayGpio { get; }
 
@@ -45,8 +46,30 @@ public interface IBoardHardwareContext
 	SpiDevice TouchSpi { get; }
 
 	/// <summary>
-	/// GPIO controller for touch-related signals (e.g., IRQ, reset, chip select),
-	/// unless covered by <see cref="TouchSpi"/>.
+	/// GPIO controller for touch-related signals (currently optional).
 	/// </summary>
 	GpioController TouchGpio { get; }
+
+	// -------- Pin assignments (host-specific) --------
+
+	/// <summary>GPIO pin used for display D/C (data/command).</summary>
+	int DisplayDataCommandPin { get; }
+
+	/// <summary>GPIO pin used for display reset.</summary>
+	int DisplayResetPin { get; }
+
+	/// <summary>GPIO pin used for display backlight/LED.</summary>
+	int DisplayBacklightPin { get; }
+
+	/// <summary>GPIO pin used for resetting the V1 I/O expander.</summary>
+	int V1ExpanderResetPin { get; }
+
+	/// <summary>GPIO pin used for resetting the V2 I/O expander.</summary>
+	int V2ExpanderResetPin { get; }
+
+	/// <summary>GPIO pin connected to V2 expander INTA.</summary>
+	int V2ExpanderInterruptAPin { get; }
+
+	/// <summary>GPIO pin connected to V2 expander INTB.</summary>
+	int V2ExpanderInterruptBPin { get; }
 }
