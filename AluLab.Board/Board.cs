@@ -27,38 +27,162 @@ namespace AluLab.Board
 	/// Must not be <see langword="null"/>. </param>
 	public class Board( IBoardHardwareContext hw )
 	{
+		/// <summary>
+		/// Host-provided hardware context used to obtain bus/controller instances and pin assignments.
+		/// </summary>
+		/// <remarks>
+		/// This class never creates nor disposes bus/controller resources; it only consumes the instances
+		/// exposed by the host via <see cref="IBoardHardwareContext"/>.
+		/// </remarks>
 		private readonly IBoardHardwareContext _hw = hw ?? throw new ArgumentNullException( nameof( hw ) );
 
+		/// <summary>
+		/// Cached I2C bus instance obtained from <see cref="_hw"/> during <see cref="Initialize"/>.
+		/// </summary>
 		private I2cBus? _i2cBus;
+
+		/// <summary>
+		/// Output expander for ALU signals (V1).
+		/// </summary>
 		private V1SignalOutALU? _v1SignalOutALU;
+
+		/// <summary>
+		/// Input expander for ALU signals (V2).
+		/// </summary>
 		private V2SignalInpALU? _v2SignalInpALU;
+
+		/// <summary>
+		/// High-level ALU controller built on top of the V1/V2 expanders.
+		/// </summary>
 		private AluController? _aluController;
+
+		/// <summary>
+		/// LCD display driver instance (ST7796S).
+		/// </summary>
 		private St7796s? _display;
+
+		/// <summary>
+		/// Touch controller driver instance (XPT2046).
+		/// </summary>
 		private XPT2046Touch? _touchController;
 
+		/// <summary>
+		/// Input service used to expose/aggregate touch input events for consumers.
+		/// </summary>
+		/// <remarks>
+		/// Initialized eagerly to allow internal wiring once touch is available; consumers should access it
+		/// via <see cref="TouchInputService"/> after successful <see cref="Initialize"/>.
+		/// </remarks>
 		private protected InputService _touchInputService = new();
 
+		/// <summary>
+		/// Indicates whether initialization has successfully completed.
+		/// </summary>
+		/// <remarks>
+		/// Marked <see langword="volatile"/> to ensure visibility across threads for the fast-path check.
+		/// </remarks>
 		private volatile bool _isInitialized;
+
+		/// <summary>
+		/// Synchronization object used to guarantee one-time initialization and consistent failure reporting.
+		/// </summary>
 		private readonly object _initLock = new();
 
+		/// <summary>
+		/// Holds the most recent initialization error, if any.
+		/// </summary>
+		/// <remarks>
+		/// Set by <see cref="Initialize"/> and some internal init steps. When initialization succeeds this is cleared.
+		/// Consumers can inspect this value after <see cref="Initialize"/> returns <see langword="false"/>.
+		/// </remarks>
 		public Exception? LastInitializationException { get; private set; }
 
+		/// <summary>
+		/// Gets whether the board has been initialized successfully.
+		/// </summary>
 		public bool IsInitialized => _isInitialized;
 
+		/// <summary>
+		/// Gets the I2C bus used by board peripherals.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public I2cBus I2cBus { get { EnsureInitialized(); return _i2cBus!; } private set => _i2cBus = value; }
 
+		/// <summary>
+		/// Gets the V1 ALU output expander instance used to drive ALU control/data lines.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public V1SignalOutALU V1SignalOutALU { get { EnsureInitialized(); return _v1SignalOutALU!; } private set => _v1SignalOutALU = value; }
 
+		/// <summary>
+		/// Gets the V2 ALU input expander instance used to observe ALU signals (including interrupt lines).
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public V2SignalInpALU V2SignalInpALU { get { EnsureInitialized(); return _v2SignalInpALU!; } private set => _v2SignalInpALU = value; }
 
+		/// <summary>
+		/// Gets the high-level ALU controller composed from the expander instances.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public AluController AluController { get { EnsureInitialized(); return _aluController!; } private set => _aluController = value; }
 
+		/// <summary>
+		/// Gets the display driver instance.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public St7796s Display { get { EnsureInitialized(); return _display!; } private set => _display = value; }
 
+		/// <summary>
+		/// Gets the touch controller driver instance.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when accessed before a successful call to <see cref="Initialize"/>.
+		/// </exception>
 		public XPT2046Touch TouchController { get { EnsureInitialized(); return _touchController!; } private set => _touchController = value; }
 
+		/// <summary>
+		/// Gets the input service used by the touch subsystem.
+		/// </summary>
+		/// <remarks>
+		/// Call <see cref="Initialize"/> first; otherwise <see cref="EnsureInitialized"/> will throw.
+		/// </remarks>
 		public InputService TouchInputService { get { EnsureInitialized(); return _touchInputService; } }
 
+		/// <summary>
+		/// Performs one-time, thread-safe initialization of board subsystems.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The method is idempotent: calling it multiple times after a successful initialization returns <see langword="true"/>
+		/// without repeating work.
+		/// </para>
+		/// <para>
+		/// Initialization steps are performed in a fixed order:
+		/// <list type="number">
+		/// <item><description>Acquire the I2C bus from <see cref="IBoardHardwareContext"/>.</description></item>
+		/// <item><description>Initialize/probe the I/O expanders used for ALU signals.</description></item>
+		/// <item><description>Create the <see cref="AluController"/>.</description></item>
+		/// <item><description>Initialize the display and touch controller.</description></item>
+		/// </list>
+		/// </para>
+		/// <para>
+		/// On failure, <see cref="LastInitializationException"/> is set with an explanatory wrapper exception and the method
+		/// returns <see langword="false"/>.
+		/// </para>
+		/// </remarks>
+		/// <returns>
+		/// <see langword="true"/> if initialization completed successfully; otherwise <see langword="false"/>.
+		/// </returns>
 		public bool Initialize()
 		{
 			if( _isInitialized )
@@ -137,6 +261,16 @@ namespace AluLab.Board
 			}
 		}
 
+		/// <summary>
+		/// Ensures the board has been initialized (successfully) before allowing access to public subsystems.
+		/// </summary>
+		/// <remarks>
+		/// This method is used by public properties as a guard to prevent consumers from using uninitialized hardware drivers.
+		/// </remarks>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown when the board has not been initialized successfully. Inspect <see cref="LastInitializationException"/>
+		/// after calling <see cref="Initialize"/> for details about the failure.
+		/// </exception>
 		public void EnsureInitialized()
 		{
 			if( _isInitialized )
@@ -151,6 +285,24 @@ namespace AluLab.Board
 			}
 		}
 
+		/// <summary>
+		/// Initializes the I/O expander devices used for the ALU interface and configures basic pin behavior.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The initialization sequence is sensitive and performed in three phases:
+		/// <list type="number">
+		/// <item><description>Attempt to reset both expanders via GPIO (best-effort).</description></item>
+		/// <item><description>Probe the expected I2C addresses to ensure the devices are present.</description></item>
+		/// <item><description>Create expander instances, call their `Initialize`, and configure pull-ups.</description></item>
+		/// </list>
+		/// </para>
+		/// <para>
+		/// Pull-ups are enabled for a set of ALU-related pins on the V1 expander and for the touch IRQ pin on the V2 expander.
+		/// </para>
+		/// </remarks>
+		/// <param name="i2cBus">The I2C bus to use for expander communication.</param>
+		/// <returns><see langword="true"/> when expander initialization completes successfully; otherwise <see langword="false"/>.</returns>
 		private bool InitInputOutputExpanders( I2cBus i2cBus )
 		{
 			GpioController i2cLinesController = _hw.I2cLinesGpio;
@@ -206,6 +358,17 @@ namespace AluLab.Board
 			return true;
 		}
 
+		/// <summary>
+		/// Creates the <see cref="AluController"/> after the required expander instances are available.
+		/// </summary>
+		/// <remarks>
+		/// This method assumes <see cref="InitInputOutputExpanders"/> ran successfully. If not, it throws to indicate a programming
+		/// error in the initialization sequence (as opposed to a runtime hardware failure).
+		/// </remarks>
+		/// <returns><see langword="true"/> if the controller was created; otherwise <see langword="false"/>.</returns>
+		/// <exception cref="InvalidOperationException">
+		/// Thrown if the expander instances do not exist (initialization order violation).
+		/// </exception>
 		private bool InitAluController()
 		{
 			if( _v1SignalOutALU is null || _v2SignalInpALU is null )
@@ -215,6 +378,14 @@ namespace AluLab.Board
 			return _aluController != null;
 		}
 
+		/// <summary>
+		/// Creates and initializes the display and touch controller drivers using host-provided SPI and GPIO resources.
+		/// </summary>
+		/// <remarks>
+		/// The display is actively initialized via <see cref="St7796s.Initialize"/>. The touch controller is constructed; any
+		/// additional calibration/configuration is expected to be handled by the touch abstraction itself or by higher layers.
+		/// </remarks>
+		/// <returns><see langword="true"/> if both driver instances were created; otherwise <see langword="false"/>.</returns>
 		private bool InitializeDisplayAndTouch()
 		{
 			_display = new(
@@ -231,6 +402,16 @@ namespace AluLab.Board
 			return _display != null && _touchController != null;
 		}
 
+		/// <summary>
+		/// Attempts to reset both I/O expander devices via their reset pins.
+		/// </summary>
+		/// <remarks>
+		/// This is a best-effort operation; exceptions are intentionally swallowed so that initialization can still proceed
+		/// on hosts that cannot supply reset GPIO access.
+		/// </remarks>
+		/// <param name="i2cLinesController">GPIO controller used to drive the reset pins.</param>
+		/// <param name="v1ResetPin">Reset pin number for the V1 expander.</param>
+		/// <param name="v2ResetPin">Reset pin number for the V2 expander.</param>
 		private static void TryResetExpanders( GpioController i2cLinesController, int v1ResetPin, int v2ResetPin )
 		{
 			try
@@ -259,6 +440,13 @@ namespace AluLab.Board
 			}
 		}
 
+		/// <summary>
+		/// Probes the I2C bus for the expander devices expected by the board design.
+		/// </summary>
+		/// <param name="bus">The I2C bus to probe.</param>
+		/// <returns>
+		/// <see langword="true"/> if all required expander addresses respond; otherwise <see langword="false"/>.
+		/// </returns>
 		private static bool ProbeExpectedExpanders( I2cBus bus )
 		{
 			var okV1 = ProbeAddress( bus, V1SignalOutALU.Address );
@@ -267,6 +455,17 @@ namespace AluLab.Board
 			return okV1 && okV2;
 		}
 
+		/// <summary>
+		/// Performs a minimal read attempt against a specific I2C address to verify device presence.
+		/// </summary>
+		/// <remarks>
+		/// The probe uses a `WriteRead` against the IOCON register (0x0A) which is typical for MCP23xxx-style expanders.
+		/// </remarks>
+		/// <param name="bus">The I2C bus used to create the device.</param>
+		/// <param name="address">7-bit I2C address to probe.</param>
+		/// <returns>
+		/// <see langword="true"/> if the device responded without throwing; otherwise <see langword="false"/>.
+		/// </returns>
 		private static bool ProbeAddress( I2cBus bus, int address )
 		{
 			using var dev = bus.CreateDevice( address );

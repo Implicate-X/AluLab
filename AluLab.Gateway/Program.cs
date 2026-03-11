@@ -14,10 +14,36 @@ using AluLab.Gateway.Hardware;
 
 namespace AluLab.Gateway;
 
+/// <summary>
+/// Application entry point for the Gateway desktop app.
+/// </summary>
+/// <remarks>
+/// Responsibilities:
+/// <list type="bullet">
+/// <item><description>Configure Serilog sinks and log levels.</description></item>
+/// <item><description>Optionally wait for a debugger attach in DEBUG builds.</description></item>
+/// <item><description>Build and start the Avalonia app, including DI registrations and early hardware initialization checks.</description></item>
+/// </list>
+/// </remarks>
 sealed class Program
 {
+	/// <summary>
+	/// Default timeout used when waiting for a debugger attach is enabled but no explicit timeout is specified.
+	/// </summary>
 	private static readonly TimeSpan DefaultDebuggerWaitTimeout = TimeSpan.FromSeconds( 60 );
 
+	/// <summary>
+	/// Configures the global Serilog logger used by the application.
+	/// </summary>
+	/// <remarks>
+	/// Logging is written to:
+	/// <list type="bullet">
+	/// <item><description>Debug output.</description></item>
+	/// <item><description>A rolling log file at <c>&lt;baseDirectory&gt;/gateway.log</c>.</description></item>
+	/// <item><description>A local Seq instance at <c>http://localhost:5341</c>.</description></item>
+	/// </list>
+	/// The configuration also enriches log events with <c>Application</c> and <c>Environment</c> properties.
+	/// </remarks>
 	static void ConfigureLogging()
 	{
 		var logPath = Path.Combine( AppContext.BaseDirectory, "gateway.log" );
@@ -39,6 +65,18 @@ sealed class Program
 			.CreateLogger();
 	}
 
+	/// <summary>
+	/// In DEBUG builds, optionally pauses startup until a debugger attaches, then breaks into it.
+	/// </summary>
+	/// <param name="args">Command line arguments used to detect whether and how long to wait.</param>
+	/// <remarks>
+	/// Enabled via either:
+	/// <list type="bullet">
+	/// <item><description><c>--wait-for-debugger</c> (uses the default timeout), or <c>--wait-for-debugger=&lt;seconds|infinite&gt;</c></description></item>
+	/// <item><description>Environment variable <c>ALULAB_WAIT_FOR_DEBUGGER</c> (<c>1</c> for default timeout, or <c>&lt;seconds|infinite&gt;</c>)</description></item>
+	/// </list>
+	/// Special values for infinite waiting: <c>infinite</c>, <c>inf</c>, <c>none</c>, <c>0</c>.
+	/// </remarks>
 	static void WaitForDebuggerIfRequested( string[] args )
 	{
 #if DEBUG
@@ -74,6 +112,23 @@ sealed class Program
 #endif
 	}
 
+	/// <summary>
+	/// Determines whether debugger-wait behavior is requested and returns the effective timeout.
+	/// </summary>
+	/// <param name="args">Command line arguments.</param>
+	/// <param name="timeout">
+	/// The parsed timeout. Can be <see cref="Timeout.InfiniteTimeSpan"/> for infinite waiting.
+	/// </param>
+	/// <returns><see langword="true"/> if waiting is enabled; otherwise <see langword="false"/>.</returns>
+	/// <remarks>
+	/// Precedence:
+	/// <list type="number">
+	/// <item><description>Command line argument <c>--wait-for-debugger</c> / <c>--wait-for-debugger=...</c></description></item>
+	/// <item><description>Environment variable <c>ALULAB_WAIT_FOR_DEBUGGER</c></description></item>
+	/// </list>
+	/// If an invalid value is provided via args, the default timeout is used (and a warning is logged).
+	/// If an invalid value is provided via environment variable, it is ignored (and a warning is logged).
+	/// </remarks>
 	static bool TryGetDebuggerWaitTimeout( string[] args, out TimeSpan timeout )
 	{
 		timeout = default;
@@ -125,6 +180,16 @@ sealed class Program
 		return false;
 	}
 
+	/// <summary>
+	/// Parses a debugger-wait timeout expressed in seconds or as an "infinite" token.
+	/// </summary>
+	/// <param name="value">The raw string value to parse.</param>
+	/// <param name="timeout">The resulting timeout value if parsing succeeds.</param>
+	/// <returns><see langword="true"/> if parsing succeeded; otherwise <see langword="false"/>.</returns>
+	/// <remarks>
+	/// Accepted infinite tokens: <c>infinite</c>, <c>inf</c>, <c>none</c>, <c>0</c>.
+	/// Otherwise the value must be a non-negative integer number of seconds.
+	/// </remarks>
 	static bool TryParseTimeoutSeconds( string value, out TimeSpan timeout )
 	{
 		timeout = default;
@@ -145,6 +210,21 @@ sealed class Program
 		return true;
 	}
 
+	/// <summary>
+	/// Creates and configures the Avalonia <see cref="AppBuilder"/> for the Gateway.
+	/// </summary>
+	/// <returns>The configured <see cref="AppBuilder"/>.</returns>
+	/// <remarks>
+	/// Configuration includes:
+	/// <list type="bullet">
+	/// <item><description>Platform detection and font setup.</description></item>
+	/// <item><description>Integration of Serilog into Microsoft.Extensions.Logging.</description></item>
+	/// <item><description>DI registrations for board/hardware services and <c>DisplayService</c>.</description></item>
+	/// <item><description>An early board availability/initialization check after host services are built.</description></item>
+	/// <item><description>Attaching <c>DisplayService</c> to the main window when ready.</description></item>
+	/// </list>
+	/// Any exceptions during the early board check or display attach are caught and logged to avoid breaking app startup.
+	/// </remarks>
 	public static AppBuilder BuildAvaloniaApp()
 		=> AppBuilder.Configure<App>()
 			.UsePlatformDetect()
@@ -229,6 +309,13 @@ sealed class Program
 				}
 			} );
 
+	/// <summary>
+	/// Application entry point.
+	/// </summary>
+	/// <param name="args">Command line arguments forwarded to Avalonia's desktop lifetime.</param>
+	/// <remarks>
+	/// Ensures logs are flushed by calling <see cref="Log.CloseAndFlush"/> in a <c>finally</c> block.
+	/// </remarks>
 	[STAThread]
 	public static void Main( string[] args )
 	{
