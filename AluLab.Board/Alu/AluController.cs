@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Iot.Device.Mcp23xxx;
 using AluLab.Board.InputOutputExpander;
 using AluLab.Common.Relay;
+using System.Diagnostics;
 
 namespace AluLab.Board.Alu
 {
@@ -39,9 +40,33 @@ namespace AluLab.Board.Alu
 		public record AluOutputs( byte Raw, string Binary, string Hex );
 
 		/// <summary>
+		/// Snapshot of the ALU state (V1 and V2 outputs).
+		/// </summary>
+		/// <param name="V1PortA">V1 Port A raw value.</param>
+		/// <param name="V1PortABinary">V1 Port A binary representation.</param>
+		/// <param name="V1PortB">V1 Port B raw value.</param>
+		/// <param name="V1PortBBinary">V1 Port B binary representation.</param>
+		/// <param name="V2PortB">V2 Port B raw value.</param>
+		/// <param name="V2PortBBinary">V2 Port B binary representation.</param>
+		/// <param name="V2PortBHex">V2 Port B hex representation.</param>
+		public record AluSnapshot(
+			byte V1PortA,
+			string V1PortABinary,
+			byte V1PortB,
+			string V1PortBBinary,
+			byte V2PortB,
+			string V2PortBBinary,
+			string V2PortBHex );
+
+		/// <summary>
 		/// Triggered as soon as outputs have been read (e.g., after <see cref="ReadOutputs"/> or <see cref="ApplyPinToHardware"/>).
 		/// </summary>
 		public event Action<AluOutputs>? OutputsUpdated;
+
+		/// <summary>
+		/// Triggered when a complete snapshot of ALU state (V1 and V2 outputs) has been read.
+		/// </summary>
+		public event Action<AluSnapshot>? SnapshotUpdated;
 
 		/// <summary>
 		/// Triggered when the <see cref="SyncClient"/> receives a remote input event (pin + state).
@@ -187,12 +212,38 @@ namespace AluLab.Board.Alu
 		/// </remarks>
 		public AluOutputs ReadOutputs()
 		{
-			byte raw = _v2.ReadRegisterSafe( Register.GPIO, Port.PortB );
-			var binary = Convert.ToString( raw, 2 ).PadLeft( 8, '0' );
-			var hex = raw.ToString( "X2" );
-			var outp = new AluOutputs( raw, binary, hex );
-			OutputsUpdated?.Invoke( outp );
-			return outp;
+
+			byte rawV1PortA = _v1.ReadRegisterSafe( Register.GPIO, Port.PortA );
+			byte rawV1PortB = _v1.ReadRegisterSafe( Register.GPIO, Port.PortB );
+			byte rawV2PortB = _v2.ReadRegisterSafe( Register.GPIO, Port.PortB );
+
+			byte rawV1PortBOlat;
+
+			(rawV1PortB, rawV1PortBOlat ) = _v1.ReadOlatAndGpioSafe( Port.PortA );
+
+			var binV1PortA = Convert.ToString( rawV1PortA, 2 ).PadLeft( 8, '0' );
+			var binV1PortB = Convert.ToString( rawV1PortB, 2 ).PadLeft( 8, '0' );
+			var binV2PortB = Convert.ToString( rawV2PortB, 2 ).PadLeft( 8, '0' );
+			var hexV2PortB = rawV2PortB.ToString( "X2" );
+
+			var binV1PortBOlat = Convert.ToString( rawV1PortBOlat, 2 ).PadLeft( 8, '0' );
+
+			var outV2PortB = new AluOutputs( rawV2PortB, binV2PortB, hexV2PortB );
+			OutputsUpdated?.Invoke( outV2PortB );
+
+			SnapshotUpdated?.Invoke(
+				new AluSnapshot(
+					rawV1PortA, binV1PortA,
+					rawV1PortB, binV1PortB,
+					rawV2PortB, binV2PortB, hexV2PortB ) );
+
+			Debug.WriteLine( $"-------------------" );
+			Debug.WriteLine( $"V1 Port A: {binV1PortA}" );
+			Debug.WriteLine( $"V1 Port B: {binV1PortBOlat}" );
+			Debug.WriteLine( $"V1 Port B: {binV1PortB}" );
+			Debug.WriteLine( $"V2 Port B: {binV2PortB}" );
+
+			return outV2PortB;
 		}
 
 		/// <summary>

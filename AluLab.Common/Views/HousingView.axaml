@@ -80,8 +80,9 @@
 					   Margin="413,61,0,0"/>
 
 				<!-- Dotted Lines -->
-				<Line StartPoint="0,2"
-					  EndPoint="430,2"
+				<!-- Top -->
+				<Line StartPoint="0,0"
+					  EndPoint="430,0"
 					  Stroke="Gray"
 					  StrokeThickness="2"
 					  StrokeDashArray="1,1"
@@ -90,6 +91,7 @@
 					  Margin="25,60,0,0"
 					  ZIndex="0"/>
 
+				<!-- Bottom -->
 				<Line StartPoint="0,0"
 					  EndPoint="430,0"
 					  Stroke="Gray"
@@ -482,8 +484,9 @@
 				<!-- Pin A=B -->
 				<StackPanel HorizontalAlignment="Left"
 							VerticalAlignment="Top"
-							Margin="350,262,0,0"
-							ZIndex="2">
+							Margin="345,262,0,0"
+							ZIndex="2"
+							Orientation="Vertical">
 					<TextBlock Classes="pin-label"
 							   Text="A=B↓"
 							   HorizontalAlignment="Center"
@@ -495,7 +498,7 @@
 				<!-- Pin CN+4 -->
 				<StackPanel HorizontalAlignment="Left"
 							VerticalAlignment="Top"
-							Margin="400,262,0,0"
+							Margin="391,262,0,0"
 							ZIndex="2">
 					<TextBlock Classes="pin-label"
 							   Text="CN+4↓"
@@ -504,21 +507,6 @@
 							   Margin="5,0,0,0"/>
 					<Ellipse Name="CN4" Classes="pin"/>
 				</StackPanel>
-
-				<Border IsVisible="{Binding #HousingControl.IsLogOverlayVisible}"
-						Background="#CC000000"
-						CornerRadius="6"
-						Padding="8"
-						Margin="10"
-						HorizontalAlignment="Right"
-						VerticalAlignment="Bottom">
-					<TextBox Width="420"
-							 Height="160"
-							 IsReadOnly="True"
-							 AcceptsReturn="True"
-							 TextWrapping="Wrap"
-							 Text="{Binding #HousingControl.LogsText}" />
-				</Border>
 
 				<!-- Log-Overlay (ALULAB_LOGOVERLAY must be defined) -->
 				<Border IsVisible="{Binding #HousingControl.IsLogOverlayVisible}"

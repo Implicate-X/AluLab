@@ -72,22 +72,20 @@ namespace AluLab.Board.InputOutputExpander
 		/// <param name="portBits">An array of bit values to apply to the port. If no values are provided, all bits on the port are set to high.</param>
 		public void SetPort( Port port, params byte[] portBits )
 		{
-			byte portData;
-
 			if( portBits.Length >= 1 )
 			{
-				portData = ReadSafe( Register.GPIO, port );
+				// IMPORTANT: read output latch, not live pin values
+				byte portData = ReadSafe( Register.OLAT, port );
 
 				for( int i = 0; i < portBits.Length; i++ )
-				{
 					portData |= portBits[ i ];
-				}
 
-				WriteSafe( Register.GPIO, portData, port );
+				// Write back to latch
+				WriteSafe( Register.OLAT, portData, port );
 			}
 			else
 			{
-				WriteSafe( Register.GPIO, 0b11111111, port );
+				WriteSafe( Register.OLAT, 0b11111111, port );
 			}
 		}
 
@@ -103,22 +101,20 @@ namespace AluLab.Board.InputOutputExpander
 		/// no values are provided, all bits on the port are cleared.</param>
 		public void ResetPort( Port port, params byte[] portBits )
 		{
-			byte portData;
-
 			if( portBits.Length >= 1 )
 			{
-				portData = ReadSafe( Register.GPIO, port );
+				// IMPORTANT: read output latch, not live pin values
+				byte portData = ReadSafe( Register.OLAT, port );
 
 				for( int i = 0; i < portBits.Length; i++ )
-				{
-					portData &= ( byte )~( portBits[ i ] );
-				}
+					portData &= (byte)~portBits[ i ];
 
-				WriteSafe( Register.GPIO, portData, port );
+				// Write back to latch
+				WriteSafe( Register.OLAT, portData, port );
 			}
 			else
 			{
-				WriteSafe( Register.GPIO, 0b00000000, port );
+				WriteSafe( Register.OLAT, 0b00000000, port );
 			}
 		}
 
@@ -262,6 +258,41 @@ namespace AluLab.Board.InputOutputExpander
 		/// via a process-wide lock and automatically retried on transient failures.
 		/// </remarks>
 		public void EnableRegisterSafe() => EnableSafe();
+
+		public byte ReadGpioSafe( Port port ) => ReadSafe( Register.GPIO, port );
+
+		public byte ReadOlatSafe( Port port ) => ReadSafe( Register.OLAT, port );
+
+		/// <summary>
+		/// Reads both the output latch (<see cref="Register.OLAT"/>) and the live GPIO state (<see cref="Register.GPIO"/>)
+		/// for the specified <paramref name="port"/> using the safe (synchronized + retrying) read helper.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// This is useful when you need to compare what the MCP23017 is currently driving (<c>OLAT</c>) with what is
+		/// actually observed on the pins (<c>GPIO</c>)—for example to detect contention, external forcing, or wiring issues.
+		/// </para>
+		/// <para>
+		/// The reads are performed sequentially; each call is protected by the global I2C lock and may be retried on
+		/// transient <see cref="IOException"/> failures via <see cref="ReadSafe"/>. The returned tuple does not represent
+		/// an atomic snapshot; the pin state may change between the two reads (e.g., due to external circuitry or interrupts).
+		/// </para>
+		/// </remarks>
+		/// <param name="port">The MCP23017 port (<c>A</c> or <c>B</c>) to read.</param>
+		/// <returns>
+		/// A tuple containing:
+		/// <list type="bullet">
+		/// <item><description><c>Olat</c>: the value read from <see cref="Register.OLAT"/> (output latch)</description></item>
+		/// <item><description><c>Gpio</c>: the value read from <see cref="Register.GPIO"/> (live pin state)</description></item>
+		/// </list>
+		/// </returns>
+		public (byte Olat, byte Gpio) ReadOlatAndGpioSafe( Port port )
+		{
+			var olat = ReadSafe( Register.OLAT, port );
+			var gpio = ReadSafe( Register.GPIO, port );
+			return (olat, gpio);
+		}
+
 		/// <summary>
 		/// Executes the specified action with automatic retries using exponential backoff in case of transient I/O failures.
 		/// </summary>
