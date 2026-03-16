@@ -126,7 +126,7 @@ namespace AluLab.Board.InputOutputExpander
 			SetDir( Port.PortA, 0b00000000 );
 			SetDir( Port.PortB, 0b00000000 );
 
-			SetPort( Port.PortA );
+			ResetPort( Port.PortA );
 			ResetPort( Port.PortB );
 		}
 	}

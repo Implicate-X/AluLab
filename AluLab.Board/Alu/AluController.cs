@@ -275,6 +275,8 @@ namespace AluLab.Board.Alu
 		{
 			_logger.LogInformation( "ApplyPinToHardware: {Pin} -> {State}", pinName, state );
 
+			Debug.WriteLine( $"ApplyPinToHardware: {pinName} -> {state}" );
+
 			try
 			{
 				if( !s_pinMap.TryGetValue( pinName, out var entry ) )
@@ -319,6 +321,7 @@ namespace AluLab.Board.Alu
 		/// <param name="state"><see langword="true"/> = set, <see langword="false"/> = reset.
 		private void SetOrResetPort( Port port, byte mask, bool state )
 		{
+			Debug.WriteLine( $"SetOrResetPort: Port={port}, Mask=0b{Convert.ToString( mask, 2 ).PadLeft( 8, '0' )}, State={state}" );
 			if( state )
 				_v1.SetPort( port, mask );
 			else
@@ -334,6 +337,33 @@ namespace AluLab.Board.Alu
 			_cts?.Dispose();
 			_v1?.Dispose();
 			_v2?.Dispose();
+		}
+
+		/// <summary>
+		/// Applies the specified synchronization state to the hardware outputs.
+		/// </summary>
+		/// <param name="state">The synchronization state to apply.</param>
+		/// <remarks>
+		/// <para>
+		/// This method directly sets the hardware outputs according to the provided <see cref="SyncState"/>.
+		/// </para>
+		/// <para>
+		/// Pins that are not part of the synchronization state are untouched.
+		/// </para>
+		/// </remarks>
+		public void ApplySyncStateToHardware( SyncState state )
+		{
+			if( state is null )
+				throw new ArgumentNullException( nameof( state ) );
+
+			foreach( var (pin, value) in state.Pins )
+			{
+				// Initial-Apply: NICHT ins Sync forwarden (sonst Broadcast/Echo beim Start)
+				ApplyPinToHardware( pin, value, forwardInputToSync: false, reportOutputsToSync: false );
+			}
+
+			// lokalen Status nachziehen
+			ReadOutputs();
 		}
 	}
 }

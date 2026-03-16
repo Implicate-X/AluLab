@@ -6,6 +6,8 @@ using Avalonia;
 using Serilog;
 using Serilog.Events;
 using AluLab.Common;
+using AluLab.Common.Services;
+using AluLab.Common.Relay;
 using AluLab.Board.Services;
 using AluLab.Board.Platform;
 using AluLab.Workbench.Hardware;
@@ -65,111 +67,36 @@ sealed class Program
 			.CreateLogger();
 	}
 
-
 	/// <summary>
-	/// Creates and configures the Avalonia-<see cref="AppBuilder"/> for the Workbench application.
+	/// Creates the Avalonia <see cref="AppBuilder"/> pre-configured for the Workbench application.
 	/// </summary>
 	/// <remarks>
-	/// This factory method encapsulates the UI initialization and the app-specific host/DI configuration.
-	/// Two central hooks are set on the <see cref="App"/> via <c>.AfterSetup(...)</c>:
+	/// This method centralizes UI host creation so it can be customized (e.g., platform options,
+	/// DI/host wiring, or hardware context initialization) without changing <see cref="Main(string[])"/>.
+	/// The underlying factory is expected to:
 	/// <list type="bullet">
-	/// <item><description> <c>ConfigureHostServices</c>: Registers the required services in the DI container, in particular:
-	/// <list type="bullet">
-	/// <item><description>Logging via <c>Microsoft.Extensions.Logging</c> with Serilog as the provider (providers are cleaned up beforehand).</description></item>
-	/// <item><description><see cref="IBoardHardwareContext"/> → <see cref="HardwareContext"/> (singleton).</description></item>
-	/// <item><description><see cref="IBoardProvider"/> → <see cref="BoardProvider"/> (singleton).</description></item>
-	/// </list>
-	/// </description></item>
-	/// <item><description><c>AfterHostServicesBuilt</c>: Performs an early hardware/board sanity check after the ServiceProvider has been built:
-	/// attempts to obtain and initialize a board and logs errors/warnings via <see cref="ILogger{TCategoryName}"/>.
-	/// UI initialization is not aborted; errors are simply logged. </description></item>
+	/// <item><description>Construct the application and wire any required services.</description></item>
+	/// <item><description>Initialize the <see cref="HardwareContext"/> used by the Workbench runtime.</description></item>
 	/// </list>
 	/// </remarks>
-	/// <returns>The configured <see cref="AppBuilder"/>, which can then be started.</returns>
+	/// <returns>A configured <see cref="AppBuilder"/> ready to start the classic desktop lifetime.</returns>
 	public static AppBuilder BuildAvaloniaApp()
-		=> AppBuilder.Configure<App>()
-			.UsePlatformDetect()
-			.WithInterFont()
-			.LogToTrace()
-			.AfterSetup( builder =>
-			{
-				if( builder.Instance is App app )
-				{
-					app.ConfigureHostServices = services =>
-					{
-						services.AddLogging( lb =>
-						{
-							lb.ClearProviders();
-							lb.AddSerilog( Log.Logger, dispose: false );
-						} );
+		=> DesktopAppBuilderFactory.Create<Program, HardwareContext>();
 
-						services.AddSingleton<IBoardHardwareContext, HardwareContext>();
-						services.AddSingleton<IBoardProvider, BoardProvider>();
-						services.AddSingleton<DisplayService>();
-					};
-
-					app.AfterHostServicesBuilt = sp =>
-					{
-						var logger = sp.GetRequiredService<ILogger<Program>>();
-
-						try
-						{
-							var provider = sp.GetService<IBoardProvider>();
-							if( provider is null )
-							{
-								logger.LogError( "Board: IBoardProvider not registered." );
-								return;
-							}
-
-							if( !provider.TryGetBoard( out var board, out var error ) || board is null )
-							{
-								logger.LogWarning( "Board: not available: {Error}", error );
-								return;
-							}
-
-							if( board.Initialize() )
-							{
-								logger.LogInformation( "Board: initialized." );
-
-								try
-								{
-									board.AluController.ConfigureSync( "https://iot.homelabs.one/sync", logger );
-									logger.LogInformation( "Board: ALU sync configured." );
-								}
-								catch( Exception ex )
-								{
-									logger.LogWarning( ex, "Board: failed to configure ALU sync." );
-								}
-
-								return;
-							}
-
-							logger.LogError(
-								"Board: initialization failed: {Reason}",
-								board.LastInitializationException?.ToString() ?? "Unknown error" );
-						}
-						catch( Exception ex )
-						{
-							logger.LogError( ex, "Board: early check exception" );
-						}
-					};
-
-					app.MainWindowReady += window =>
-					{
-						try
-						{
-							var mirror = app.Services.GetRequiredService<DisplayService>();
-							mirror.Attach( window );
-						}
-						catch( Exception ex )
-						{
-							var logger = app.Services.GetService<ILogger<Program>>();
-							logger?.LogWarning( ex, "DisplayMirror: attach failed." );
-						}
-					};
-				}
-			} );
-
+	/// <summary>
+	/// Application entry point.
+	/// </summary>
+	/// <param name="args">Command line arguments forwarded to Avalonia's desktop lifetime.</param>
+	/// <remarks>
+	/// Startup sequence:
+	/// <list type="number">
+	/// <item><description>Configure Serilog early so startup failures are captured.</description></item>
+	/// <item><description>Build and start Avalonia using the classic desktop lifetime.</description></item>
+	/// <item><description>Always flush and close logs before process exit.</description></item>
+	/// </list>
+	/// The <see cref="STAThreadAttribute"/> is required for many desktop UI features that rely on a
+	/// single-threaded COM apartment (common on Windows).
+	/// </remarks>
 	[STAThread]
 	public static void Main( string[] args )
 	{

@@ -10,6 +10,7 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Iot.Device.Bindings" />
     <PackageReference Include="Iot.Device.Bindings.SkiaSharpAdapter" />
+    <PackageReference Include="Avalonia.Desktop" />
     <!--<PackageReference Include="SkiaSharp" />-->
   </ItemGroup>
 

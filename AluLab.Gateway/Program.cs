@@ -30,19 +30,22 @@ sealed class Program
 	/// <summary>
 	/// Default timeout used when waiting for a debugger attach is enabled but no explicit timeout is specified.
 	/// </summary>
+	/// <remarks>
+	/// Used when the user enables debugger waiting (via CLI arg or environment variable) without providing a numeric timeout.
+	/// </remarks>
 	private static readonly TimeSpan DefaultDebuggerWaitTimeout = TimeSpan.FromSeconds( 60 );
 
 	/// <summary>
 	/// Configures the global Serilog logger used by the application.
 	/// </summary>
 	/// <remarks>
-	/// Logging is written to:
+	/// This method initializes <see cref="Log.Logger"/> with a sink configuration appropriate for local development:
 	/// <list type="bullet">
-	/// <item><description>Debug output.</description></item>
-	/// <item><description>A rolling log file at <c>&lt;baseDirectory&gt;/gateway.log</c>.</description></item>
-	/// <item><description>A local Seq instance at <c>http://localhost:5341</c>.</description></item>
+	/// <item><description>Debug sink (Visual Studio Output window when debugging).</description></item>
+	/// <item><description>Rolling file sink writing to <c>&lt;baseDirectory&gt;/gateway.log</c> (daily rollover, 14 retained files).</description></item>
+	/// <item><description>Seq sink pointing to <c>http://localhost:5341</c>.</description></item>
 	/// </list>
-	/// The configuration also enriches log events with <c>Application</c> and <c>Environment</c> properties.
+	/// Additionally, log events are enriched with constant properties (<c>Application</c> and <c>Environment</c>) to simplify filtering in Seq/file logs.
 	/// </remarks>
 	static void ConfigureLogging()
 	{
@@ -70,12 +73,23 @@ sealed class Program
 	/// </summary>
 	/// <param name="args">Command line arguments used to detect whether and how long to wait.</param>
 	/// <remarks>
-	/// Enabled via either:
+	/// This is a developer convenience for early-startup debugging (before UI initialization).
+	/// When enabled, the process repeatedly polls <see cref="Debugger.IsAttached"/> until either a debugger attaches
+	/// (then calls <see cref="Debugger.Break"/>), or the timeout elapses.
+	/// <para/>
+	/// Enable waiting using either:
 	/// <list type="bullet">
-	/// <item><description><c>--wait-for-debugger</c> (uses the default timeout), or <c>--wait-for-debugger=&lt;seconds|infinite&gt;</c></description></item>
-	/// <item><description>Environment variable <c>ALULAB_WAIT_FOR_DEBUGGER</c> (<c>1</c> for default timeout, or <c>&lt;seconds|infinite&gt;</c>)</description></item>
+	/// <item><description>
+	/// CLI: <c>--wait-for-debugger</c> (uses <see cref="DefaultDebuggerWaitTimeout"/>)
+	/// or <c>--wait-for-debugger=&lt;seconds|infinite&gt;</c>.
+	/// </description></item>
+	/// <item><description>
+	/// Environment: <c>ALULAB_WAIT_FOR_DEBUGGER</c> (<c>1</c> for default timeout, or <c>&lt;seconds|infinite&gt;</c>).
+	/// </description></item>
 	/// </list>
 	/// Special values for infinite waiting: <c>infinite</c>, <c>inf</c>, <c>none</c>, <c>0</c>.
+	/// <para/>
+	/// In non-DEBUG builds this method does nothing.
 	/// </remarks>
 	static void WaitForDebuggerIfRequested( string[] args )
 	{
@@ -121,13 +135,23 @@ sealed class Program
 	/// </param>
 	/// <returns><see langword="true"/> if waiting is enabled; otherwise <see langword="false"/>.</returns>
 	/// <remarks>
+	/// This method centralizes the enablement rules and parsing logic used by <see cref="WaitForDebuggerIfRequested"/>.
+	/// <para/>
 	/// Precedence:
 	/// <list type="number">
 	/// <item><description>Command line argument <c>--wait-for-debugger</c> / <c>--wait-for-debugger=...</c></description></item>
 	/// <item><description>Environment variable <c>ALULAB_WAIT_FOR_DEBUGGER</c></description></item>
 	/// </list>
-	/// If an invalid value is provided via args, the default timeout is used (and a warning is logged).
-	/// If an invalid value is provided via environment variable, it is ignored (and a warning is logged).
+	/// <para/>
+	/// Validation behavior:
+	/// <list type="bullet">
+	/// <item><description>
+	/// Invalid CLI values still enable waiting, but fall back to <see cref="DefaultDebuggerWaitTimeout"/> (and log a warning).
+	/// </description></item>
+	/// <item><description>
+	/// Invalid environment variable values are ignored (and log a warning).
+	/// </description></item>
+	/// </list>
 	/// </remarks>
 	static bool TryGetDebuggerWaitTimeout( string[] args, out TimeSpan timeout )
 	{
@@ -187,8 +211,16 @@ sealed class Program
 	/// <param name="timeout">The resulting timeout value if parsing succeeds.</param>
 	/// <returns><see langword="true"/> if parsing succeeded; otherwise <see langword="false"/>.</returns>
 	/// <remarks>
-	/// Accepted infinite tokens: <c>infinite</c>, <c>inf</c>, <c>none</c>, <c>0</c>.
-	/// Otherwise the value must be a non-negative integer number of seconds.
+	/// Accepted formats:
+	/// <list type="bullet">
+	/// <item><description>
+	/// Infinite: <c>infinite</c>, <c>inf</c>, <c>none</c>, or <c>0</c> (maps to <see cref="Timeout.InfiniteTimeSpan"/>).
+	/// </description></item>
+	/// <item><description>
+	/// Finite: a non-negative integer number of seconds (maps to <see cref="TimeSpan.FromSeconds(double)"/>).
+	/// </description></item>
+	/// </list>
+	/// Any other value (including negative numbers and non-integers) fails parsing.
 	/// </remarks>
 	static bool TryParseTimeoutSeconds( string value, out TimeSpan timeout )
 	{
@@ -211,110 +243,29 @@ sealed class Program
 	}
 
 	/// <summary>
-	/// Creates and configures the Avalonia <see cref="AppBuilder"/> for the Gateway.
+	/// Creates and configures the Avalonia <see cref="AppBuilder"/> for the Gateway desktop app.
 	/// </summary>
-	/// <returns>The configured <see cref="AppBuilder"/>.</returns>
+	/// <returns>An <see cref="AppBuilder"/> preconfigured for desktop hosting.</returns>
 	/// <remarks>
-	/// Configuration includes:
-	/// <list type="bullet">
-	/// <item><description>Platform detection and font setup.</description></item>
-	/// <item><description>Integration of Serilog into Microsoft.Extensions.Logging.</description></item>
-	/// <item><description>DI registrations for board/hardware services and <c>DisplayService</c>.</description></item>
-	/// <item><description>An early board availability/initialization check after host services are built.</description></item>
-	/// <item><description>Attaching <c>DisplayService</c> to the main window when ready.</description></item>
-	/// </list>
-	/// Any exceptions during the early board check or display attach are caught and logged to avoid breaking app startup.
+	/// This delegates to <c>DesktopAppBuilderFactory.Create&lt;TProgram, THardwareContext&gt;()</c> to apply shared
+	/// application defaults (e.g., platform detection, dependency injection, and hardware context wiring) consistently
+	/// across AluLab desktop applications.
 	/// </remarks>
 	public static AppBuilder BuildAvaloniaApp()
-		=> AppBuilder.Configure<App>()
-			.UsePlatformDetect()
-			.WithInterFont()
-			.LogToTrace()
-			.AfterSetup( builder =>
-			{
-				if( builder.Instance is App app )
-				{
-					app.ConfigureHostServices = services =>
-					{
-						services.AddLogging( lb =>
-						{
-							lb.ClearProviders();
-							lb.AddSerilog( Log.Logger, dispose: false );
-						} );
-
-						services.AddSingleton<IBoardHardwareContext, HardwareContext>();
-						services.AddSingleton<IBoardProvider, BoardProvider>();
-						services.AddSingleton<DisplayService>();
-					};
-
-					app.AfterHostServicesBuilt = sp =>
-					{
-						var logger = sp.GetRequiredService<ILogger<Program>>();
-
-						try
-						{
-							var provider = sp.GetService<IBoardProvider>();
-							if( provider is null )
-							{
-								logger.LogError( "Board: IBoardProvider not registered." );
-								return;
-							}
-
-							if( !provider.TryGetBoard( out var board, out var error ) || board is null )
-							{
-								logger.LogWarning( "Board: not available: {Error}", error );
-								return;
-							}
-
-							if( board.Initialize() )
-							{
-								logger.LogInformation( "Board: initialized." );
-
-								try
-								{
-									board.AluController.ConfigureSync( "https://iot.homelabs.one/sync", logger );
-									logger.LogInformation( "Board: ALU sync configured." );
-								}
-								catch( Exception ex )
-								{
-									logger.LogWarning( ex, "Board: failed to configure ALU sync." );
-								}
-
-								return;
-							}
-
-							logger.LogError(
-								"Board: initialization failed: {Reason}",
-								board.LastInitializationException?.ToString() ?? "Unknown error" );
-						}
-						catch( Exception ex )
-						{
-							logger.LogError( ex, "Board: early check exception" );
-						}
-					};
-
-					app.MainWindowReady += window =>
-					{
-						try
-						{
-							var mirror = app.Services.GetRequiredService<DisplayService>();
-							mirror.Attach( window );
-						}
-						catch( Exception ex )
-						{
-							var logger = app.Services.GetService<ILogger<Program>>();
-							logger?.LogWarning( ex, "DisplayMirror: attach failed." );
-						}
-					};
-				}
-			} );
+		=> DesktopAppBuilderFactory.Create<Program, HardwareContext>();
 
 	/// <summary>
 	/// Application entry point.
 	/// </summary>
 	/// <param name="args">Command line arguments forwarded to Avalonia's desktop lifetime.</param>
 	/// <remarks>
-	/// Ensures logs are flushed by calling <see cref="Log.CloseAndFlush"/> in a <c>finally</c> block.
+	/// Startup flow:
+	/// <list type="number">
+	/// <item><description>Configure logging via <see cref="ConfigureLogging"/>.</description></item>
+	/// <item><description>Optionally wait for debugger attach via <see cref="WaitForDebuggerIfRequested"/> (DEBUG only).</description></item>
+	/// <item><description>Create the Avalonia app builder via <see cref="BuildAvaloniaApp"/> and start the desktop lifetime.</description></item>
+	/// </list>
+	/// Serilog is always flushed on exit by calling <see cref="Log.CloseAndFlush"/> in a <c>finally</c> block.
 	/// </remarks>
 	[STAThread]
 	public static void Main( string[] args )
