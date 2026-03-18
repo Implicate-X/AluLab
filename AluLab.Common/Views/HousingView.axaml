@@ -161,7 +161,7 @@
 							Margin="100,12,0,0"
 							ZIndex="2"
 							Orientation="Vertical">
-					<Ellipse Name="A2" Classes="pin"/>
+					<Ellipse Name="A2" Classes="pin" />
 					<TextBlock Classes="pin-label"
 							   Margin="-5,0,0,0"
 							   Text="↓A2"

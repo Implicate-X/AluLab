@@ -11,6 +11,7 @@ using AluLab.Common.Relay;
 using AluLab.Board.Services;
 using AluLab.Board.Platform;
 using AluLab.Workbench.Hardware;
+using AluLab.Workbench.Services;
 
 namespace AluLab.Workbench;
 
@@ -81,7 +82,15 @@ sealed class Program
 	/// </remarks>
 	/// <returns>A configured <see cref="AppBuilder"/> ready to start the classic desktop lifetime.</returns>
 	public static AppBuilder BuildAvaloniaApp()
-		=> DesktopAppBuilderFactory.Create<Program, HardwareContext>();
+		=> DesktopAppBuilderFactory.Create<Program, HardwareContext>(
+			configureExtraServices: services =>
+			{
+				services.AddSingleton<WindowPlacementService>();
+			},
+			afterBoardInitialized: ( sp, logger ) =>
+			{
+				// aktuell nicht benötigt, aber bleibt als Hook
+			} );
 
 	/// <summary>
 	/// Application entry point.
@@ -104,7 +113,22 @@ sealed class Program
 
 		try
 		{
-			BuildAvaloniaApp().StartWithClassicDesktopLifetime( args );
+			var builder = BuildAvaloniaApp();
+
+			// Workbench-spezifisch: Fensterposition/-größe persistieren.
+			builder.AfterSetup( b =>
+			{
+				if( b.Instance is not App app )
+					return;
+
+				app.MainWindowReady += window =>
+				{
+					var placement = app.Services.GetRequiredService<WindowPlacementService>();
+					placement.Attach( window );
+				};
+			} );
+
+			builder.StartWithClassicDesktopLifetime( args );
 		}
 		finally
 		{

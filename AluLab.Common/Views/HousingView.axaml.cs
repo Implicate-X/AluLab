@@ -17,12 +17,6 @@ using AluLab.Common.ViewModels;
 
 namespace AluLab.Common.Views;
 
-/// <summary>
-/// Represents the main user control for the housing view in the ALU Lab application.
-/// Handles UI logic for pin state management, synchronization with a remote service,
-/// and logging of pin and ALU output events. Integrates with <see cref="HousingViewModel"/>
-/// and <see cref="SyncService"/> for data binding and real-time updates.
-/// </summary>
 public partial class HousingView : UserControl, INotifyPropertyChanged
 {
 	// ViewModel and service references for data binding and synchronization.
@@ -42,54 +36,25 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	// Collection of log entries for UI and diagnostics.
 	private readonly ObservableCollection<string> _logItems = new();
 
-	/// <summary>
-	/// Gets the collection of log items for display.
-	/// </summary>
 	public IReadOnlyCollection<string> LogItems => _logItems;
 
-	// Backing field for the concatenated log text.
 	private string _logsText = string.Empty;
 
-	/// <summary>
-	/// Gets the concatenated log text for overlay or diagnostics.
-	/// </summary>
 	public string LogsText
 	{
 		get => _logsText;
 		private set => SetProperty( ref _logsText, value );
 	}
 
-	/// <summary>
-	/// Event raised when a pin is toggled by the user.
-	/// </summary>
 	public event EventHandler<PinToggledEventArgs>? PinToggled;
 
-	/// <summary>
-	/// Stores the current active states of pins, with each entry mapping a unique pin identifier to a boolean value
-	/// indicating whether the pin is active.
-	/// </summary>
-	/// <remarks>The dictionary is initialized as empty and can be updated to reflect the state of each pin as
-	/// needed. Keys represent unique pin identifiers, and values indicate the active state of the corresponding pin.
-	/// This field is intended for internal tracking of pin states within the class.</remarks>
 	private readonly Dictionary<string, bool> _pinStates = new();
 
-	/// <summary>
-	/// Contains the set of predefined output pin names available for configuration.
-	/// </summary>
-	/// <remarks>The collection includes the output pins 'F3', 'F2', 'F1', 'F0', 'P', 'G', 'AEqualsB', and
-	/// 'CN4'. These pin names can be used in various operations that require specifying an output pin.</remarks>
 	private readonly HashSet<string> _outputPins = new()
 	{
 		"F3", "F2", "F1", "F0", "P", "G", "AEqualsB", "CN4"
 	};
 
-	/// <summary>
-	/// Contains the identifiers for the pins used in the configuration, organized according to their physical or
-	/// logical layout.
-	/// </summary>
-	/// <remarks>The array provides a fixed mapping of pin names that can be referenced for pin management
-	/// operations. The order of the names corresponds to their intended arrangement, which may be important for
-	/// hardware interfacing or display purposes.</remarks>
 	private readonly string[] _pinNames = new[]
 	{
 		"A3","A2","A1","A0",
@@ -100,22 +65,44 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		"P","G","AEqualsB","CN4"
 	};
 
-	/// <summary>
-	/// Represents a solid brush with a lime green color used to indicate high-priority elements.
-	/// </summary>
-	private readonly SolidColorBrush _brushHigh = new( Colors.LimeGreen );
-	private readonly SolidColorBrush _brushLow = new( Colors.White );
+	private static readonly SolidColorBrush s_brushLowFill = new( Colors.AliceBlue );
+	private static readonly SolidColorBrush s_brushLowStroke = new( Colors.Gray );
 
-	/// <summary>
-	/// Initializes a new instance of the <see cref="HousingView"/> class.
-	/// Sets up UI components, pin event handlers, and service subscriptions.
-	/// </summary>
+	private static readonly IReadOnlyDictionary<string, PinStyle> s_stylesByPin = CreateStylesByPin();
+
+	private sealed record PinStyle( SolidColorBrush HighFill, SolidColorBrush HighStroke );
+
+	private static IReadOnlyDictionary<string, PinStyle> CreateStylesByPin()
+	{
+		Dictionary<string, PinStyle> pinStyleMap = new( StringComparer.Ordinal );
+
+		void Add( PinStyle style, params string[] pins )
+		{
+			foreach( string pin in pins )
+				pinStyleMap[pin] = style;
+		}
+
+		PinStyle pinStyleBl = new( new SolidColorBrush( Colors.DeepSkyBlue ), new SolidColorBrush( Colors.DodgerBlue ) );
+		PinStyle pinStyleRd = new( new SolidColorBrush( Colors.Red ), new SolidColorBrush( Colors.DarkRed ) );
+		PinStyle pinStyleGn = new( new SolidColorBrush( Colors.LimeGreen ), new SolidColorBrush( Colors.Green ) );
+		PinStyle pinStyleYe = new( new SolidColorBrush( Colors.Yellow ), new SolidColorBrush( Colors.Goldenrod ) );
+		PinStyle pinStyleOr = new( new SolidColorBrush( Colors.Orange ), new SolidColorBrush( Colors.DarkOrange ) );
+
+		Add( pinStyleBl, "A0", "A1", "A2", "A3", "B0", "B1", "B2", "B3" );
+		Add( pinStyleRd, "S0", "S1", "S2", "S3" );
+		Add( pinStyleGn, "F0", "F1", "F2", "F3" );
+		Add( pinStyleYe, "P", "G", "M" );
+		Add( pinStyleOr, "CN", "CN4" );
+
+		return pinStyleMap;
+	}
+
 	public HousingView()
 	{
 		InitializeComponent();
 		InitializePins();
 
-		App app = ( App )Application.Current!;
+		App app = (App)Application.Current!;
 		_viewModel = app.Services.GetRequiredService<HousingViewModel>();
 		_syncService = app.Services.GetRequiredService<SyncService>();
 
@@ -418,8 +405,8 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 				continue;
 			}
 
-			_pinStates[ name ] = false;
-			SetEllipseFill( ellipse, false );
+			_pinStates[name] = false;
+			SetEllipseFill( name, ellipse, high: false );
 
 			if( !_outputPins.Contains( name ) )
 			{
@@ -459,26 +446,18 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		}
 	}
 
-	/// <summary>
-	/// Toggles the logical state of a pin identified by its name and updates the associated visual indicator.
-	/// </summary>
-	/// <remarks>If the specified pin does not have a previously set state, its state is initialized to <see
-	/// langword="false"/> before toggling. This method also raises the <c>PinToggled</c> event to notify subscribers of
-	/// the state change and may trigger asynchronous synchronization unless synchronization is suppressed.</remarks>
-	/// <param name="name">The name of the pin whose state is to be toggled. Cannot be null.</param>
-	/// <param name="ellipse">The Ellipse control that visually represents the pin's current state. Cannot be null.</param>
 	private void TogglePinState( string name, Ellipse ellipse )
 	{
 		if( !_pinStates.TryGetValue( name, out var currentState ) )
 		{
 			currentState = false;
-			_pinStates[ name ] = currentState;
+			_pinStates[name] = currentState;
 		}
 
 		var newState = !currentState;
-		_pinStates[ name ] = newState;
+		_pinStates[name] = newState;
 
-		SetEllipseFill( ellipse, newState );
+		SetEllipseFill( name, ellipse, newState );
 
 		PinToggled?.Invoke( this, new PinToggledEventArgs( name, newState ) );
 
@@ -486,6 +465,52 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		{
 			_ = SendPinToggledToSyncAsync( name, newState );
 		}
+	}
+
+	private void SetEllipseFill( string pinName, Ellipse ellipse, bool high )
+	{
+		if( !high )
+		{
+			ellipse.Fill = s_brushLowFill;
+			ellipse.Effect = null;
+			ellipse.Stroke = s_brushLowStroke;
+			return;
+		}
+
+		if( !s_stylesByPin.TryGetValue( pinName, out var style ) )
+		{
+			// Fallback, falls ein Pin-Name nicht gemappt ist.
+			style = new PinStyle( new SolidColorBrush( Colors.LimeGreen ), new SolidColorBrush( Colors.Green ) );
+		}
+
+		ellipse.Fill = style.HighFill;
+		ellipse.Effect = new DropShadowEffect
+		{
+			Color = style.HighFill.Color,
+			BlurRadius = 24,
+			OffsetX = 0,
+			OffsetY = 0,
+			Opacity = 1,
+		};
+		ellipse.Stroke = style.HighStroke;
+	}
+
+	private void SetPinState( string name, bool high )
+	{
+		var ellipse = this.FindControl<Ellipse>( name );
+		if( ellipse == null )
+		{
+			AddLogItem( $"SetPinState ignoriert: Unbekannter Pin im UI: {name}" );
+			return;
+		}
+
+		_pinStates[name] = high;
+		SetEllipseFill( name, ellipse, high );
+
+		ellipse.InvalidateVisual();
+		ellipse.InvalidateMeasure();
+		ellipse.InvalidateArrange();
+		this.InvalidateVisual();
 	}
 
 	/// <summary>
@@ -522,46 +547,6 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		{
 			AddLogItem( $"Sync Fehler: {ex.Message} (Pin={pin}, State={state})" );
 		}
-	}
-
-	/// <summary>
-	/// Sets the fill color of the specified ellipse to indicate a high or low state.
-	/// </summary>
-	/// <remarks>Use this method to visually distinguish between high and low states in the user interface by
-	/// changing the fill color of the ellipse.</remarks>
-	/// <param name="ellipse">The ellipse whose fill color is to be set. Cannot be null.</param>
-	/// <param name="high">A value indicating whether to apply the high fill color (<see langword="true"/>) or the low fill color (<see
-	/// langword="false"/>).</param>
-	private void SetEllipseFill( Ellipse ellipse, bool high )
-	{
-		ellipse.Fill = high ? _brushHigh : _brushLow;
-	}
-
-	/// <summary>
-	/// Sets the visual and logical state of a specified pin to high or low in the user interface.
-	/// </summary>
-	/// <remarks>If the specified pin name does not match an existing control, the method logs a message and takes
-	/// no further action. The method updates both the internal state and the visual representation of the pin, ensuring
-	/// the UI reflects the change immediately.</remarks>
-	/// <param name="name">The name of the pin to update. Must correspond to an existing control in the UI.</param>
-	/// <param name="high">A value indicating whether to set the pin to high (<see langword="true"/>) or low (<see langword="false"/>).</param>
-	private void SetPinState( string name, bool high )
-	{
-		var ellipse = this.FindControl<Ellipse>( name );
-		if( ellipse == null )
-		{
-			AddLogItem( $"SetPinState ignoriert: Unbekannter Pin im UI: {name}" );
-			return;
-		}
-
-		_pinStates[ name ] = high;
-		SetEllipseFill( ellipse, high );
-
-		// Ensure rendering is updated, especially for browser/WASM targets.
-		ellipse.InvalidateVisual();
-		ellipse.InvalidateMeasure();
-		ellipse.InvalidateArrange();
-		this.InvalidateVisual();
 	}
 
 	/// <summary>
