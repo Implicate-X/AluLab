@@ -13,6 +13,7 @@
 
 using System.Text;
 using AluLab.Common.Relay;
+using AluLab.Common.Services;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder( args );
@@ -45,10 +46,16 @@ builder.Services.AddCors( options =>
 	} );
 } );
 
+// Persisted state store (single instance)
+builder.Services.AddSingleton<SyncStateStore>();
+
 var app = builder.Build();
 
-// Initialize SyncHub state on startup.
-_ = SyncHub.GetSnapshot();
+// Load persisted state once on startup
+{
+	var store = app.Services.GetRequiredService<SyncStateStore>();
+	await store.LoadAsync();
+}
 
 app.UseHttpsRedirection();
 app.UseCors();
@@ -57,10 +64,10 @@ app.UseCors();
 app.MapHub<SyncHub>( "/sync" ).RequireCors();
 
 // Endpoint: Returns the current pin state as JSON.
-app.MapGet( "/sync/state", () =>
+app.MapGet( "/sync/state", ( SyncStateStore store ) =>
 {
-	var copy = SyncHub.GetSnapshot();
-	return Results.Json( new SyncState( copy ) );
+	var (pins, _) = store.GetSnapshot();
+	return Results.Json( new SyncState( pins ) );
 } ).RequireCors();
 
 // Endpoint: Returns a simple info message about the SignalR hub.
@@ -82,14 +89,13 @@ app.MapGet( "/debug/routes", ( EndpointDataSource ds ) =>
 
 // Endpoint: Serves an HTML page for live monitoring of pin states and events via SignalR.
 // The page displays the current snapshot and recent events, and subscribes to live updates.
-app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
+app.MapGet( "/sync/monitor", ( HttpContext ctx, SyncStateStore store ) =>
 {
 	var recent = SyncHub.GetRecent( 200 );
-	var snapshot = SyncHub.GetSnapshot();
+	var (snapshot, _) = store.GetSnapshot();
 
-	// Pre-allocate StringBuilder for efficient HTML generation.
+	// existing HTML generator stays the same, only snapshot source changed
 	var sb = new StringBuilder( 16 * 1024 );
-
 	sb.Append( @"<!doctype html>
 <html>
 <head>
@@ -122,7 +128,6 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx ) =>
 	foreach( var e in recent )
 		sb.Append( System.Net.WebUtility.HtmlEncode( e ) + "\n" );
 
-	// IMPORTANT: Close #log, otherwise the <script> will end up in the log container and become visible as text.
 	sb.Append( @"</div>
 
   <script src=""https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.7/dist/browser/signalr.min.js""></script>

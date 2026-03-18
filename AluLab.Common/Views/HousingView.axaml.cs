@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Diagnostics;
 using System.ComponentModel;
@@ -17,44 +17,128 @@ using AluLab.Common.ViewModels;
 
 namespace AluLab.Common.Views;
 
+/// <summary>
+/// UI control that renders an ALU “housing” (pinout) and provides interactive pin toggling plus real-time
+/// synchronization via <see cref="SyncService"/>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Responsibilities:
+/// </para>
+/// <list type="bullet">
+/// <item><description>Owns and initializes pin UI elements (ellipses) and their input handlers.</description></item>
+/// <item><description>Keeps a local pin-state cache (<c>_pinStates</c>) to model UI state quickly.</description></item>
+/// <item><description>Subscribes to remote sync streams (pin toggles, ALU output changes, snapshot state).</description></item>
+/// <item><description>Prevents feedback loops by suppressing outgoing sync events while applying remote updates.</description></item>
+/// <item><description>Collects log entries for diagnostics and optional on-screen overlay.</description></item>
+/// </list>
+/// <para>
+/// Threading:
+/// remote events may arrive on background threads; all UI mutations are marshaled onto
+/// <see cref="Dispatcher.UIThread"/>. During those UI updates, <c>_suppressSyncSend</c> is set to prevent sending the
+/// same state back to the server.
+/// </para>
+/// <para>
+/// Lifetime:
+/// upon <see cref="Visual.DetachedFromVisualTree"/>, all subscriptions are disposed and the injected
+/// <see cref="HousingViewModel"/> is disposed asynchronously.
+/// </para>
+/// </remarks>
 public partial class HousingView : UserControl, INotifyPropertyChanged
 {
 	// ViewModel and service references for data binding and synchronization.
+	/// <summary>
+	/// View model used as the <see cref="DataContext"/> for bindings and commands.
+	/// </summary>
 	private readonly HousingViewModel? _viewModel;
+
+	/// <summary>
+	/// Synchronization service used to publish local changes and apply remote changes (snapshots and events).
+	/// </summary>
 	private readonly SyncService? _syncService;
 
 	// Subscriptions for various sync and event streams.
+	/// <summary>
+	/// Subscription for remote "PinToggled" events.
+	/// </summary>
 	private IDisposable? _pinToggledSubscription;
+
+	/// <summary>
+	/// Subscription for remote "AluOutputsChanged" events.
+	/// </summary>
 	private IDisposable? _aluOutputsSubscription;
+
+	/// <summary>
+	/// Subscription bridging <see cref="SyncService.Log"/> into the local log UI.
+	/// </summary>
 	private IDisposable? _syncLogSubscription;
+
+	/// <summary>
+	/// Subscription for pin snapshot state (<see cref="SyncService.SnapshotStateReceived"/>).
+	/// </summary>
 	private IDisposable? _snapshotPinsSubscription;
+
+	/// <summary>
+	/// Subscription for output snapshot state (<see cref="SyncService.SnapshotOutputsReceived"/>).
+	/// </summary>
 	private IDisposable? _snapshotOutputsSubscription;
 
 	// Used to suppress sending sync events during UI updates.
+	/// <summary>
+	/// 0/1 flag used to suppress outgoing sync sends while applying remote state to the UI.
+	/// </summary>
+	/// <remarks>
+	/// This prevents feedback loops: remote update → UI update → local handler sends the same update back.
+	/// Use <see cref="Volatile.Read(ref int)"/> for reads and <see cref="Interlocked.Exchange(ref int, int)"/> for writes.
+	/// </remarks>
 	private int _suppressSyncSend;
 
 	// Collection of log entries for UI and diagnostics.
+	/// <summary>
+	/// Backing store for <see cref="LogItems"/>; newest entries are inserted at index 0.
+	/// </summary>
 	private readonly ObservableCollection<string> _logItems = new();
 
+	/// <summary>
+	/// Log entries for display/diagnostics (most recent first).
+	/// </summary>
 	public IReadOnlyCollection<string> LogItems => _logItems;
 
 	private string _logsText = string.Empty;
 
+	/// <summary>
+	/// Concatenated log text used for a text-based overlay/view (most recent entry prepended).
+	/// </summary>
 	public string LogsText
 	{
 		get => _logsText;
 		private set => SetProperty( ref _logsText, value );
 	}
 
+	/// <summary>
+	/// Raised when a user toggles an input pin locally via pointer/touch interaction.
+	/// </summary>
+	/// <remarks>
+	/// This event reflects local user intent. Remote updates applied through sync do not raise this event.
+	/// </remarks>
 	public event EventHandler<PinToggledEventArgs>? PinToggled;
 
+	/// <summary>
+	/// Local cache of current pin states keyed in своем pin name (e.g. <c>"A0"</c>, <c>"F3"</c>).
+	/// </summary>
 	private readonly Dictionary<string, bool> _pinStates = new();
 
+	/// <summary>
+	/// Set of pins that are output-only and must not be user-toggleable in the UI.
+	/// </summary>
 	private readonly HashSet<string> _outputPins = new()
 	{
 		"F3", "F2", "F1", "F0", "P", "G", "AEqualsB", "CN4"
 	};
 
+	/// <summary>
+	/// Ordered list of all pins represented by the UI. Used for initialization and touch hit testing.
+	/// </summary>
 	private readonly string[] _pinNames = new[]
 	{
 		"A3","A2","A1","A0",
@@ -65,13 +149,33 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		"P","G","AEqualsB","CN4"
 	};
 
+	/// <summary>
+	/// Default visual style for an inactive/low pin fill.
+	/// </summary>
 	private static readonly SolidColorBrush s_brushLowFill = new( Colors.AliceBlue );
+
+	/// <summary>
+	/// Default visual style for an inactive/low pin stroke.
+	/// </summary>
 	private static readonly SolidColorBrush s_brushLowStroke = new( Colors.Gray );
 
+	/// <summary>
+	/// Mapping of pin name to its “high” (active) visual style.
+	/// </summary>
 	private static readonly IReadOnlyDictionary<string, PinStyle> s_stylesByPin = CreateStylesByPin();
 
+	/// <summary>
+	/// Encapsulates the “active/high” look for a pin (fill + stroke).
+	/// </summary>
 	private sealed record PinStyle( SolidColorBrush HighFill, SolidColorBrush HighStroke );
 
+	/// <summary>
+	/// Builds the static mapping of pin names to their thematic colors when active.
+	/// </summary>
+	/// <remarks>
+	/// This allows grouping related pins (A/B inputs, select lines, outputs, carry pins) with consistent colors for
+	/// readability.
+	/// </remarks>
 	private static IReadOnlyDictionary<string, PinStyle> CreateStylesByPin()
 	{
 		Dictionary<string, PinStyle> pinStyleMap = new( StringComparer.Ordinal );
@@ -97,6 +201,24 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		return pinStyleMap;
 	}
 
+	/// <summary>
+	/// Initializes the view, wires up pin controls, resolves dependencies, and sets up attach/detach behavior.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Dependency resolution:
+	/// pulls <see cref="HousingViewModel"/> and <see cref="SyncService"/> from <see cref="App.Services"/>.
+	/// </para>
+	/// <para>
+	/// Data context:
+	/// enforces that <see cref="DataContext"/> is a <see cref="HousingViewModel"/> (reverts external changes).
+	/// </para>
+	/// <para>
+	/// Visual tree integration:
+	/// on attach → starts sync subscriptions and initial connection;
+	/// on detach → disposes subscriptions and disposes the view model.
+	/// </para>
+	/// </remarks>
 	public HousingView()
 	{
 		InitializeComponent();
@@ -149,8 +271,17 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	}
 
 	/// <summary>
-	/// Initializes synchronization subscriptions and loads the initial state from the sync service.
+	/// Creates/recreates synchronization subscriptions and kicks off the initial connect + state load.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Subscriptions are disposed/replaced to avoid duplicate handlers if the view is re-attached.
+	/// </para>
+	/// <para>
+	/// Remote updates are applied within a suppression scope (<c>_suppressSyncSend</c>) to prevent echoing those changes
+	/// back through the sync service.
+	/// </para>
+	/// </remarks>
 	private void StartSyncAutoConnect()
 	{
 		if( _syncService is null )
@@ -335,7 +466,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 			AddLogItem( $"Sync: IsConnected={_syncService?.IsConnected}" );
 
 			// Snapshot is pushed by the server after client is ready.
-			AddLogItem( "Sync: Initial-Snapshot �ber Server-Push (SnapshotPins/SnapshotOutputs)." );
+			AddLogItem( "Sync: Initial-Snapshot über Server-Push (SnapshotPins/SnapshotOutputs)." );
 
 			AddLogItem( "Sync: ConnectAndLoadInitialStateAsync end" );
 		}
@@ -371,7 +502,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	/// Updates the user interface to reflect the current state of the ALU output pins based on the specified raw byte
 	/// value.
 	/// </summary>
-	/// <remarks>Each bit in the raw value is mapped to a particular pin in the user interface, such as F0�F3, P, G,
+	/// <remarks>Each bit in the raw value is mapped to a particular pin in the user interface, such as F0–F3, P, G,
 	/// AEqualsB, and CN4. Setting the appropriate bit to <see langword="true"/> activates the corresponding pin in the UI.
 	/// This method is typically used to visually represent the ALU's output state for debugging or educational
 	/// purposes.</remarks>
@@ -446,6 +577,15 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		}
 	}
 
+	/// <summary>
+	/// Toggles a pin locally, updates its visuals, raises <see cref="PinToggled"/>, and (unless suppressed) sends the
+	/// change to the sync service.
+	/// </summary>
+	/// <remarks>
+	/// Outgoing sync is skipped while <c>_suppressSyncSend</c> is set, which is used when applying remote updates.
+	/// </remarks>
+	/// <param name="name">Pin identifier.</param>
+	/// <param name="ellipse">UI element representing the pin.</param>
 	private void TogglePinState( string name, Ellipse ellipse )
 	{
 		if( !_pinStates.TryGetValue( name, out var currentState ) )
@@ -467,6 +607,16 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		}
 	}
 
+	/// <summary>
+	/// Applies the appropriate “low/high” styling to a pin ellipse.
+	/// </summary>
+	/// <remarks>
+	/// When <paramref name="high"/> is <see langword="true"/>, a colored fill/stroke and drop shadow are applied based on
+	/// <paramref name="pinName"/>. If no style is mapped, a green fallback style is used.
+	/// </remarks>
+	/// <param name="pinName">Pin identifier used to pick a style.</param>
+	/// <param name="ellipse">Target UI element.</param>
+	/// <param name="high">Whether the pin is active/high.</param>
 	private void SetEllipseFill( string pinName, Ellipse ellipse, bool high )
 	{
 		if( !high )
@@ -495,6 +645,14 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		ellipse.Stroke = style.HighStroke;
 	}
 
+	/// <summary>
+	/// Sets a pin state programmatically (typically from remote sync) and refreshes the UI element if present.
+	/// </summary>
+	/// <remarks>
+	/// If the pin is not found in the XAML visual tree, the update is ignored and a log entry is produced.
+	/// </remarks>
+	/// <param name="name">Pin identifier.</param>
+	/// <param name="high">New state.</param>
 	private void SetPinState( string name, bool high )
 	{
 		var ellipse = this.FindControl<Ellipse>( name );
@@ -614,6 +772,10 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	/// <summary>
 	/// Processes a touch event at the specified coordinates, toggling the pin if a hit is detected.
 	/// </summary>
+	/// <remarks>
+	/// Performs a simple circular hit test against each input pin ellipse (output pins are skipped). When a hit is found,
+	/// this delegates to <see cref="TogglePinState(string, Ellipse)"/>.
+	/// </remarks>
 	/// <param name="x">The X coordinate of the touch.</param>
 	/// <param name="y">The Y coordinate of the touch.</param>
 	public void ProcessTouch( double x, double y )

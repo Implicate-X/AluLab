@@ -3,42 +3,75 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AluLab.Common.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AluLab.Common.Relay;
 
 /// <summary>
-/// SignalR hub for synchronizing pin states and ALU outputs between clients in real-time.
-/// Maintains a log of recent pin toggle events, tracks the current state of input pins,
-/// and broadcasts changes to connected clients.
+/// SignalR hub used to synchronize ALU/relay UI state between connected clients.
 /// </summary>
+/// <remarks>
+/// <para>
+/// The hub maintains a server-side snapshot of pin states and the latest ALU output byte via
+/// <see cref="SyncStateStore"/>. Clients can push changes (e.g. pin toggles) and receive updates from
+/// other clients in near real-time.
+/// </para>
+/// <para>
+/// A small in-memory event log is kept (static, process-local) to aid debugging and inspection.
+/// This log is bounded to <see cref="MaxLogEntries"/> entries.
+/// </para>
+/// <para>
+/// Client-facing SignalR method names used by this hub:
+/// <list type="bullet">
+/// <item><description><c>PinToggled</c> (broadcast to others)</description></item>
+/// <item><description><c>AluOutputsChanged</c> (broadcast to all)</description></item>
+/// <item><description><c>SnapshotPins</c> (sent to caller)</description></item>
+/// <item><description><c>SnapshotOutputsRaw</c> (sent to caller)</description></item>
+/// <item><description><c>TestClientEvent</c> (sent to caller)</description></item>
+/// </list>
+/// </para>
+/// </remarks>
 public class SyncHub : Hub
 {
 	/// <summary>
-	/// Represents a synchronization event, such as a pin toggle or client action.
+	/// A single event record stored in the in-memory hub log.
 	/// </summary>
-	/// <param name="TimestampMillis">The event timestamp in milliseconds since Unix epoch.</param>
-	/// <param name="ConnectionId">The SignalR connection ID of the client.</param>
-	/// <param name="Pin">The pin identifier or event type.</param>
-	/// <param name="State">The state associated with the event (e.g., pin high/low).</param>
+	/// <param name="TimestampMillis">UTC Unix timestamp in milliseconds.</param>
+	/// <param name="ConnectionId">SignalR connection id that produced the event.</param>
+	/// <param name="Pin">Pin name (or a pseudo pin such as <c>OnConnected</c>).</param>
+	/// <param name="State">Associated state value (for pin toggles).</param>
 	public sealed record SyncEvent( long TimestampMillis, string ConnectionId, string Pin, bool State );
 
 	/// <summary>
-	/// Data transfer object representing ALU output values in multiple formats.
+	/// DTO for exposing the latest ALU outputs in multiple representations.
 	/// </summary>
-	/// <param name="Raw">Raw byte value of the ALU output.</param>
-	/// <param name="Binary">Binary string representation of the output.</param>
-	/// <param name="Hex">Hexadecimal string representation of the output.</param>
+	/// <param name="Raw">Raw output byte.</param>
+	/// <param name="Binary">Binary output representation (8-bit, left padded with 0s).</param>
+	/// <param name="Hex">Hex output representation (2 characters).</param>
 	public sealed record AluOutputsDto( byte Raw, string Binary, string Hex );
 
+	/// <summary>
+	/// Process-wide bounded event queue used for recent activity inspection.
+	/// </summary>
 	private static readonly ConcurrentQueue<SyncEvent> s_events = new();
-	private const int MaxLogEntries = 1000;
-
-	private static readonly ConcurrentDictionary<string, bool> s_pinStates = new();
-	private static AluOutputsDto? s_lastOutputs;
 
 	/// <summary>
-	/// Set of recognized input pin names (case-insensitive).
+	/// Maximum number of entries retained in <see cref="s_events"/>.
+	/// </summary>
+	private const int MaxLogEntries = 1000;
+
+	private readonly SyncStateStore _store;
+
+	/// <summary>
+	/// Creates a new hub instance using the provided shared state store.
+	/// </summary>
+	/// <param name="store">Shared state store holding pin snapshot and last ALU output byte.</param>
+	public SyncHub( SyncStateStore store ) => _store = store;
+
+	/// <summary>
+	/// Pins treated as "inputs" for snapshot purposes. Only these pins are persisted into the store
+	/// when received via <see cref="PinToggled(string, bool)"/>.
 	/// </summary>
 	private static readonly HashSet<string> s_inputPins = new( StringComparer.OrdinalIgnoreCase )
 	{
@@ -49,9 +82,9 @@ public class SyncHub : Hub
 	};
 
 	/// <summary>
-	/// Adds a synchronization event to the event log, maintaining a maximum number of entries.
+	/// Adds an event to the in-memory log and trims older entries to enforce the max size.
 	/// </summary>
-	/// <param name="ev">The event to enqueue.</param>
+	/// <param name="ev">Event to enqueue.</param>
 	public static void EnqueueEvent( SyncEvent ev )
 	{
 		s_events.Enqueue( ev );
@@ -60,10 +93,12 @@ public class SyncHub : Hub
 	}
 
 	/// <summary>
-	/// Retrieves a list of recent synchronization events as formatted strings.
+	/// Returns a human-readable list of the most recent hub events (newest first).
 	/// </summary>
-	/// <param name="maxEntries">Maximum number of entries to return (default: 100).</param>
-	/// <returns>List of event descriptions, most recent first.</returns>
+	/// <param name="maxEntries">
+	/// Maximum number of entries to return. Values &lt;= 0 default to 100.
+	/// </param>
+	/// <returns>Formatted event lines suitable for diagnostics/log display.</returns>
 	public static IReadOnlyList<string> GetRecent( int maxEntries = 100 )
 	{
 		var arr = s_events.ToArray();
@@ -75,50 +110,46 @@ public class SyncHub : Hub
 	}
 
 	/// <summary>
-	/// Asynchronously retrieves the current state of all tracked pins.
+	/// Returns the current pin snapshot from the shared store.
 	/// </summary>
-	/// <returns>A <see cref="SyncState"/> containing the pin states.</returns>
+	/// <returns>A <see cref="SyncState"/> containing the latest known pin states.</returns>
 	public Task<SyncState> GetState()
 	{
-		try
-		{
-			var copy = s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
-			return Task.FromResult( new SyncState( copy ) );
-		}
-		catch
-		{
-			return Task.FromResult( new SyncState() );
-		}
+		var (pins, _) = _store.GetSnapshot();
+		return Task.FromResult( new SyncState( pins ) );
 	}
 
 	/// <summary>
-	/// Returns a snapshot of the current pin states.
+	/// Gets the last reported ALU output byte from the shared store, if available.
 	/// </summary>
-	/// <returns>Dictionary mapping pin names to their states.</returns>
-	public static Dictionary<string, bool> GetSnapshot() =>
-		s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
-
-	/// <summary>
-	/// Gets the most recently reported ALU outputs, if available.
-	/// </summary>
-	/// <returns>The last <see cref="AluOutputsDto"/> or null.</returns>
-	public static AluOutputsDto? GetLastOutputs() => s_lastOutputs;
-
-	/// <summary>
-	/// Asynchronously retrieves the most recent ALU outputs.
-	/// </summary>
-	/// <returns>The last <see cref="AluOutputsDto"/> or null.</returns>
+	/// <returns>
+	/// An <see cref="AluOutputsDto"/> containing raw/binary/hex forms of the last output,
+	/// or <see langword="null"/> if no outputs have been reported yet.
+	/// </returns>
 	public Task<AluOutputsDto?> GetLastOutputsState()
 	{
-		try { return Task.FromResult( s_lastOutputs ); }
-		catch { return Task.FromResult<AluOutputsDto?>( null ); }
+		var (_, raw) = _store.GetSnapshot();
+		if( raw is null )
+			return Task.FromResult<AluOutputsDto?>( null );
+
+		var dto = new AluOutputsDto(
+			raw.Value,
+			Convert.ToString( raw.Value, 2 ).PadLeft( 8, '0' ),
+			raw.Value.ToString( "X2" ) );
+
+		return Task.FromResult<AluOutputsDto?>( dto );
 	}
 
 	/// <summary>
-	/// Handles a pin toggle event from a client, updates state, and notifies other clients.
+	/// Called by a client to report that a pin was toggled.
 	/// </summary>
-	/// <param name="pin">The pin identifier.</param>
-	/// <param name="state">The new state of the pin.</param>
+	/// <remarks>
+	/// The event is logged. If <paramref name="pin"/> is in <see cref="s_inputPins"/>, the new state is
+	/// persisted into <see cref="SyncStateStore"/>. The change is then broadcast to all other clients
+	/// via the <c>PinToggled</c> SignalR message.
+	/// </remarks>
+	/// <param name="pin">Pin identifier (e.g. <c>A0</c>, <c>S3</c>, <c>CN</c>).</param>
+	/// <param name="state">New pin state.</param>
 	public async Task PinToggled( string pin, bool state )
 	{
 		var id = Context?.ConnectionId ?? "unknown";
@@ -126,60 +157,69 @@ public class SyncHub : Hub
 		EnqueueEvent( new SyncEvent( now, id, pin, state ) );
 
 		if( s_inputPins.Contains( pin ) )
-			s_pinStates[ pin ] = state;
+			_store.SetPin( pin, state );
 
 		await Clients.Others.SendAsync( "PinToggled", pin, state );
 	}
 
 	/// <summary>
-	/// Reports new ALU output values and broadcasts them to all clients.
+	/// Called by a client to report the current ALU outputs.
 	/// </summary>
-	/// <param name="raw">Raw byte value.</param>
-	/// <param name="binary">Binary string representation.</param>
-	/// <param name="hex">Hexadecimal string representation.</param>
+	/// <remarks>
+	/// The raw byte is persisted into <see cref="SyncStateStore"/>, and the change is broadcast to all
+	/// clients via the <c>AluOutputsChanged</c> message.
+	/// </remarks>
+	/// <param name="raw">Raw output byte.</param>
+	/// <param name="binary">Binary representation provided by the client.</param>
+	/// <param name="hex">Hex representation provided by the client.</param>
 	public async Task ReportAluOutputs( byte raw, string binary, string hex )
 	{
-		var dto = new AluOutputsDto( raw, binary, hex );
-		s_lastOutputs = dto;
-
-		await Clients.All.SendAsync( "AluOutputsChanged", dto.Raw, dto.Binary, dto.Hex );
+		_store.SetLastOutputsRaw( raw );
+		await Clients.All.SendAsync( "AluOutputsChanged", raw, binary, hex );
 	}
 
 	/// <summary>
-	/// Called when a client connects. Logs the connection event.
+	/// SignalR lifecycle hook invoked when a new connection is established.
 	/// </summary>
+	/// <remarks>
+	/// The connection is logged as an event for diagnostics.
+	/// </remarks>
 	public override async Task OnConnectedAsync()
 	{
 		await base.OnConnectedAsync();
 
 		var id = Context?.ConnectionId ?? "unknown";
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "OnConnected", true ) );
-
-		// Kein Snapshot hier.
 	}
 
 	/// <summary>
-	/// Handles client readiness, sending the current pin and ALU output states to the caller.
+	/// Called by a client to indicate it is ready to receive the current snapshot.
 	/// </summary>
-	/// <param name="token">Client authentication or session token.</param>
+	/// <remarks>
+	/// The <paramref name="token"/> parameter is currently not validated or used; it is accepted
+	/// to support future authentication/handshake needs.
+	/// The caller receives <c>SnapshotPins</c> and <c>SnapshotOutputsRaw</c> messages.
+	/// </remarks>
+	/// <param name="token">Client-provided token (reserved for future use).</param>
 	public async Task ClientReady( string token )
 	{
 		var id = Context?.ConnectionId ?? "unknown";
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "ClientReady", true ) );
 
-		var copy = s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
+		var (pins, raw) = _store.GetSnapshot();
 
-		await Clients.Caller.SendAsync( "SnapshotPins", copy );
-
-		byte? raw = s_lastOutputs?.Raw;
+		await Clients.Caller.SendAsync( "SnapshotPins", pins );
 		await Clients.Caller.SendAsync( "SnapshotOutputsRaw", raw );
 
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "ClientReadySent", true ) );
 	}
 
 	/// <summary>
-	/// Handles a snapshot request from a client, sending current pin and ALU output states.
+	/// Called by a client to request a fresh snapshot of the current server state.
 	/// </summary>
+	/// <remarks>
+	/// The caller receives <c>SnapshotPins</c> and <c>SnapshotOutputsRaw</c> messages.
+	/// </remarks>
 	public async Task RequestSnapshot()
 	{
 		var id = Context?.ConnectionId ?? "unknown";
@@ -187,18 +227,16 @@ public class SyncHub : Hub
 
 		EnqueueEvent( new SyncEvent( now, id, "RequestSnapshot", true ) );
 
-		var copy = s_pinStates.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
+		var (pins, raw) = _store.GetSnapshot();
 
-		await Clients.Caller.SendAsync( "SnapshotPins", copy );
-
-		byte? raw = s_lastOutputs?.Raw;
+		await Clients.Caller.SendAsync( "SnapshotPins", pins );
 		await Clients.Caller.SendAsync( "SnapshotOutputsRaw", raw );
 
 		EnqueueEvent( new SyncEvent( DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id, "RequestSnapshotSent", true ) );
 	}
 
 	/// <summary>
-	/// Sends a test event to the calling client for connectivity or diagnostics.
+	/// Sends a simple test message to the caller to validate connectivity and client handlers.
 	/// </summary>
 	public Task TestClientEvent()
 		=> Clients.Caller.SendAsync( "TestClientEvent", "ok" );
