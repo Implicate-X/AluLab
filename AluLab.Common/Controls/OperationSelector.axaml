@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="72"
+			 x:Class="AluLab.Common.Controls.OperationSelector">
+	<Border Background="#F7F7F7"
+			BorderBrush="#CCCCCC"
+			BorderThickness="1"
+			CornerRadius="8"
+			Padding="8">
+		<StackPanel Spacing="6" Width="240">
+			<TextBlock Text="Operation"
+					   FontWeight="SemiBold"
+					   FontSize="12"
+					   Foreground="#333333" />
+			<ComboBox x:Name="OperationComboBox"
+					  HorizontalAlignment="Stretch" />
+		</StackPanel>
+	</Border>
+</UserControl>

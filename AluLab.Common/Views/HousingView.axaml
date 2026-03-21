@@ -168,6 +168,13 @@
 									  Value="0"
 									  Color="LimeGreen"/>
 
+				<!-- Operation Select S -->
+				<c:OperationSelector x:Name="OperationSelector"
+								   HorizontalAlignment="Left"
+								   VerticalAlignment="Top"
+								   Margin="124,126,0,0"
+								   ZIndex="3"/>
+
 				<!-- Pin A3 -->
 				<StackPanel HorizontalAlignment="Left"
 							VerticalAlignment="Top"
