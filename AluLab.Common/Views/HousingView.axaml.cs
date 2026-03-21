@@ -337,6 +337,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		}
 
 		syncService.Log += Handler;
+
 		return new DelegateDisposable( () => syncService.Log -= Handler );
 	}
 
