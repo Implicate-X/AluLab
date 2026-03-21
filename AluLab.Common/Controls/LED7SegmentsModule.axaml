@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d" d:DesignWidth="37" d:DesignHeight="48"
+			 x:Class="AluLab.Common.Controls.LED7SegmentsModule">
+	<Border Width="37"
+			Height="48"
+			CornerRadius="1"
+			Padding="4,4,4,4"
+			VerticalAlignment="Center"
+			HorizontalAlignment="Center"
+			Background="LightGray"
+			BorderBrush="DarkGray"
+			BorderThickness="1">
+		<Canvas>
+			<Polygon x:Name="SegA" Points="10.626,4.252 23.429,4.252 27.193,1.093 26.100,0.000 9.072,0.000 7.977,1.095 10.626,4.252" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegB" Points="23.884,4.795 21.567,17.938 23.491,20.048 25.717,18.888 28.605,2.505 27.696,1.596 23.884,4.795" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegC" Points="20.968,22.795 18.452,35.601 21.061,38.710 22.470,37.302 25.225,23.290 23.403,20.637 20.968,22.795" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegD" Points="17.909,36.056 5.107,36.056 1.295,39.255 2.033,40.308 19.463,40.308 20.558,39.213 17.909,36.056" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegE" Points="4.651,35.513 7.271,22.201 5.386,20.052 3.033,21.740 0.000,37.406 0.887,38.672 4.651,35.513" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegF" Points="5.495,19.344 7.830,17.599 10.083,4.707 7.474,1.598 6.066,3.006 3.546,17.294 5.495,19.344" Fill="#FF4080FF"/>
+			<Polygon x:Name="SegG" Points="21.077,18.453 8.330,18.081 5.982,19.809 8.091,22.147 20.413,22.493 22.813,20.340 21.077,18.453" Fill="#FF4080FF"/>
+		</Canvas>
+	</Border>
+</UserControl>

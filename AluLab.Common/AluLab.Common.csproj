@@ -38,6 +38,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Controls\LED7SegmentsModule.axaml.cs">
+      <DependentUpon>LED7SegmentsModule.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\HousingWindow.axaml.cs">
       <DependentUpon>HousingWindow.axaml</DependentUpon>
     </Compile>

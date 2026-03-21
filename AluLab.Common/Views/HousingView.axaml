@@ -3,6 +3,7 @@
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:AluLab.Common.ViewModels"
+			 xmlns:c="clr-namespace:AluLab.Common.Controls"
 			 x:Class="AluLab.Common.Views.HousingView"
 			 x:Name="HousingControl"
 			 x:DataType="vm:HousingViewModel"
@@ -31,8 +32,6 @@
 	<Grid>
 		<Viewbox Stretch="Uniform" StretchDirection="Both">
 			<Grid Width="480" Height="320" Background="Transparent">
-
-				<!-- Housing Rectangle -->
 				<Rectangle x:Name="HousingRect"
 						   Stroke="Gray"
 						   StrokeThickness="4"
@@ -141,6 +140,33 @@
 					  VerticalAlignment="Top"
 					  Margin="64,0,0,0"
 					  ZIndex="0"/>
+
+				<!-- Operand A -->
+				<c:LED7SegmentsModule x:Name="OperandA"
+									  HorizontalAlignment="Left"
+									  VerticalAlignment="Top"
+									  Margin="124,72,0,0"
+									  ZIndex="2"
+									  Value="0"
+									  Color="DodgerBlue"/>
+
+				<!-- Operand B -->
+				<c:LED7SegmentsModule x:Name="OperandB"
+									  HorizontalAlignment="Left"
+									  VerticalAlignment="Top"
+									  Margin="324,72,0,0"
+									  ZIndex="2"
+									  Value="0"
+									  Color="DodgerBlue"/>
+
+				<!-- Function Result F -->
+				<c:LED7SegmentsModule x:Name="ResultF"
+									  HorizontalAlignment="Left"
+									  VerticalAlignment="Top"
+									  Margin="124,204,0,0"
+									  ZIndex="2"
+									  Value="0"
+									  Color="LimeGreen"/>
 
 				<!-- Pin A3 -->
 				<StackPanel HorizontalAlignment="Left"

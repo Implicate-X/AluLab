@@ -14,3 +14,32 @@ public abstract class ViewModelBase : ObservableObject
 
   public string Title { get => _title; set => SetProperty(ref _title, value); }
 }
+
+
+
+
+
+//private static IReadOnlyDictionary<string, PinStyle> CreateStylesByPin()
+//{
+//	Dictionary<string, PinStyle> pinStyleMap = new( StringComparer.Ordinal );
+
+//	void Add( PinStyle style, params string[] pins )
+//	{
+//		foreach( string pin in pins )
+//			pinStyleMap[ pin ] = style;
+//	}
+
+//	PinStyle pinStyleBl = new( new SolidColorBrush( Colors.DeepSkyBlue ), new SolidColorBrush( Colors.DodgerBlue ) );
+//	PinStyle pinStyleRd = new( new SolidColorBrush( Colors.Red ), new SolidColorBrush( Colors.DarkRed ) );
+//	PinStyle pinStyleGn = new( new SolidColorBrush( Colors.LimeGreen ), new SolidColorBrush( Colors.Green ) );
+//	PinStyle pinStyleYe = new( new SolidColorBrush( Colors.Yellow ), new SolidColorBrush( Colors.Goldenrod ) );
+//	PinStyle pinStyleOr = new( new SolidColorBrush( Colors.Orange ), new SolidColorBrush( Colors.DarkOrange ) );
+
+//	Add( pinStyleBl, "A0", "A1", "A2", "A3", "B0", "B1", "B2", "B3" );
+//	Add( pinStyleRd, "S0", "S1", "S2", "S3" );
+//	Add( pinStyleGn, "F0", "F1", "F2", "F3" );
+//	Add( pinStyleYe, "P", "G", "M" );
+//	Add( pinStyleOr, "CN", "CN4" );
+
+//	return pinStyleMap;
+//}
