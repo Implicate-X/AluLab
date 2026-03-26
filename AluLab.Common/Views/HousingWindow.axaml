@@ -11,7 +11,7 @@
         Title="AluLab"
         Width="500"
         Height="350"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/implicate-x-logo.ico"
         mc:Ignorable="d">
   <views:HousingView />
 </Window>

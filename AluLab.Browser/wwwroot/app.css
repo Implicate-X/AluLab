@@ -1,5 +1,5 @@
 ﻿/* HTML styles for the splash screen */
-.avalonia-splash {
+.implicate-x-splash {
     position: absolute;
     height: 100%;
     width: 100%;
@@ -13,45 +13,45 @@
 
 /* Light theme styles */
 @media (prefers-color-scheme: light) {
-    .avalonia-splash {
+    .implicate-x-splash {
         background: white;
     }
 
-    .avalonia-splash h2 {
+    .implicate-x-splash h2 {
         color: #1b2a4e;
     }
 
-    .avalonia-splash a {
+    .implicate-x-splash a {
         color: #0D6EFD;
     }
 }
 
 @media (prefers-color-scheme: dark) {
-    .avalonia-splash {
+    .implicate-x-splash {
         background: #1b2a4e;
     }
 
-    .avalonia-splash h2 {
+    .implicate-x-splash h2 {
         color: white;
     }
 
-    .avalonia-splash a {
+    .implicate-x-splash a {
         color: white;
     }
 }
 
-.avalonia-splash h2 {
+.implicate-x-splash h2 {
     font-weight: 400;
     font-size: 1.5rem;
 }
 
-.avalonia-splash a {
+.implicate-x-splash a {
     text-decoration: none;
     font-size: 2.5rem;
     display: block;   
 }
 
-.avalonia-splash.splash-close {
+.implicate-x-splash.splash-close {
     transition: opacity 200ms, display 200ms;
     display: none;
     opacity: 0;

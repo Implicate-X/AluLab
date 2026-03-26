@@ -7,6 +7,16 @@
     <PublishTrimmed>true</PublishTrimmed>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\favicon.ico" />
+    <Content Remove="wwwroot\implicate-x-logo.ico" />
+    <Content Remove="wwwroot\implicate-x-logo.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="wwwroot\favicon.ico" />
+    <AvaloniaResource Include="wwwroot\implicate-x-logo.ico" />
+    <AvaloniaResource Include="wwwroot\implicate-x-logo.svg" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Browser" />
