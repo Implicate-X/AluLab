@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Avalonia;
-using Avalonia.Layout;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
 
 namespace AluLab.Common.Controls;
 
-/// <summary>
-/// UI control that lets the user pick one of the 16 ALU <c>S</c>-code operations (<c>S0..S3</c>) via a tile grid.
-/// </summary>
 public partial class OperationSelector : UserControl
 {
 	public static readonly StyledProperty<bool> ModeMProperty =
@@ -20,6 +17,13 @@ public partial class OperationSelector : UserControl
 
 	public static readonly StyledProperty<bool> CarryInCnProperty =
 		AvaloniaProperty.Register<OperationSelector, bool>( nameof( CarryInCn ) );
+
+	/// <summary>
+	/// When true, interpret A/B inputs as active-low (“ACTIVE-LOW DATA” table).
+	/// When false, use active-high table.
+	/// </summary>
+	public static readonly StyledProperty<bool> ActiveLowDataProperty =
+		AvaloniaProperty.Register<OperationSelector, bool>( nameof( ActiveLowData ), false );
 
 	public static readonly StyledProperty<int> SelectedSCodeProperty =
 		AvaloniaProperty.Register<OperationSelector, int>( nameof( SelectedSCode ), 0 );
@@ -38,6 +42,12 @@ public partial class OperationSelector : UserControl
 		set => SetValue( CarryInCnProperty, value );
 	}
 
+	public bool ActiveLowData
+	{
+		get => GetValue( ActiveLowDataProperty );
+		set => SetValue( ActiveLowDataProperty, value );
+	}
+
 	public int SelectedSCode
 	{
 		get => GetValue( SelectedSCodeProperty );
@@ -45,7 +55,6 @@ public partial class OperationSelector : UserControl
 	}
 
 	private int _suppressSelectionChanged;
-
 	private readonly Border?[] _tileBordersByS = new Border?[ 16 ];
 
 	public OperationSelector()
@@ -54,7 +63,7 @@ public partial class OperationSelector : UserControl
 
 		PropertyChanged += ( _, e ) =>
 		{
-			if( e.Property == ModeMProperty || e.Property == CarryInCnProperty )
+			if( e.Property == ModeMProperty || e.Property == CarryInCnProperty || e.Property == ActiveLowDataProperty )
 				RebuildTiles();
 			else if( e.Property == SelectedSCodeProperty )
 				UpdateTileSelectionVisuals();
@@ -79,11 +88,8 @@ public partial class OperationSelector : UserControl
 		for( var s = 0; s < 16; s++ )
 		{
 			var sCode = s; // capture-safe copy
-
 			var raw = list[ s ];
 
-			// 1) drop "Logic 0000  " / "Arith(CN=L) 0101  "
-			// 2) convert "~(X)" -> overline metadata
 			var ( tileText, overStart, overLen ) = ParseOperationTileText( raw );
 
 			var content = new OverlineText
@@ -98,19 +104,19 @@ public partial class OperationSelector : UserControl
 				OverlineOffset = 0.0,
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Margin = new Thickness( 0,-4,0,0 )
+				Margin = new Thickness( 0, -4, 0, 0 )
 			};
 
 			var tile = new Border
 			{
 				Classes = { "op-tile" },
-				Tag = s,
+				Tag = sCode,
 				Child = content,
+				Margin = new Thickness( 2 )
 			};
 
-			_tileBordersByS[ s ] = tile;
+			_tileBordersByS[ sCode ] = tile;
 
-			// Click/tap selects the tile.
 			tile.PointerPressed += ( _, e ) =>
 			{
 				if( e.GetCurrentPoint( tile ).Properties.IsLeftButtonPressed == false )
@@ -150,7 +156,6 @@ public partial class OperationSelector : UserControl
 			if( tile is null )
 				continue;
 
-			// Use a class so it also works with theme/style changes.
 			if( i == idx )
 				tile.Classes.Add( "selected" );
 			else
@@ -160,41 +165,39 @@ public partial class OperationSelector : UserControl
 
 	private IReadOnlyList<string> GetCurrentList()
 	{
+		// M=H => logic table
 		if( ModeM )
-			return s_logic;
+			return ActiveLowData ? s_logicActiveLow : s_logicActiveHigh;
 
-		return CarryInCn ? s_arithCnHigh : s_arithCnLow;
+		// M=L => arithmetic table depends on CN and active-high/low mapping
+		if( ActiveLowData )
+		{
+			// ACTIVE-LOW DATA image: Cn=L => no carry, Cn=H => with carry
+			return CarryInCn ? s_arithActiveLow_WithCarry_CnH : s_arithActiveLow_NoCarry_CnL;
+		}
+
+		// ACTIVE-HIGH DATA image: Cn=H => no carry, Cn=L => with carry
+		return CarryInCn ? s_arithActiveHigh_NoCarry_CnH : s_arithActiveHigh_WithCarry_CnL;
 	}
 
 	/// <summary>
-	/// Produces tile display text without "Logic"/"Arith(...)" and without the 4-bit prefix.
-	/// Also converts "~(X)" into (text, overline metadata).
+	/// Removes "Logic/Arith(...)" and the 4-bit code prefix; keeps "~(X)" supported.
 	/// </summary>
 	private static ( string Text, int OverlineStart, int OverlineLength ) ParseOperationTileText( string expression )
 	{
 		if( string.IsNullOrWhiteSpace( expression ) )
 			return ( string.Empty, -1, 0 );
 
-		// Expected formats:
-		// "Logic 0101  ~(A AND B)"
-		// "Arith(CN=L) 0101  A - B"
-		//
-		// We want only the operation part after the two spaces following the bit pattern.
 		var s = expression.Trim();
 
-		// Find the *second* double-space separator (after the 4-bit code).
-		// Example: "Logic 0101  ~(A AND B)"
-		//          ^----prefix----^ ^-op starts here
 		var firstSep = s.IndexOf( ' ' );
 		if( firstSep < 0 )
 			return ParseSingleOverline( s );
 
-		// find the 4-bit block start: after first space
 		var afterPrefix = s.IndexOf( ' ', firstSep + 1 );
 		if( afterPrefix < 0 )
 			return ParseSingleOverline( s );
 
-		// now look for the double-space that separates code and operation text
 		var opSep = s.IndexOf( "  ", afterPrefix, StringComparison.Ordinal );
 		if( opSep < 0 )
 			return ParseSingleOverline( s );
@@ -202,30 +205,6 @@ public partial class OperationSelector : UserControl
 		var opText = s[( opSep + 2 )..].Trim();
 		return ParseSingleOverline( opText );
 	}
-
-	private static readonly string[] s_logic =
-	{
-		"Logic 0000  ~(A)", "Logic 0001  ~(B)", "Logic 0010  A XOR B", "Logic 0011  A OR B",
-		"Logic 0100  A AND B", "Logic 0101  ~(A AND B)", "Logic 0110  A", "Logic 0111  B",
-		"Logic 1000  0", "Logic 1001  1", "Logic 1010  ~(A OR B)", "Logic 1011  A NAND B",
-		"Logic 1100  A NOR B", "Logic 1101  A XNOR B", "Logic 1110  A + B", "Logic 1111  (custom)"
-	};
-
-	private static readonly string[] s_arithCnLow =
-	{
-		"Arith(CN=L) 0000  A + B", "Arith(CN=L) 0001  A + ~(B)", "Arith(CN=L) 0010  A - 1", "Arith(CN=L) 0011  A",
-		"Arith(CN=L) 0100  A + 1", "Arith(CN=L) 0101  A - B", "Arith(CN=L) 0110  B - A", "Arith(CN=L) 0111  B",
-		"Arith(CN=L) 1000  A + B + 1", "Arith(CN=L) 1001  A + ~(B) + 1", "Arith(CN=L) 1010  (placeholder)", "Arith(CN=L) 1011  (placeholder)",
-		"Arith(CN=L) 1100  0", "Arith(CN=L) 1101  1", "Arith(CN=L) 1110  (placeholder)", "Arith(CN=L) 1111  (placeholder)"
-	};
-
-	private static readonly string[] s_arithCnHigh =
-	{
-		"Arith(CN=H) 0000  A + B + 1", "Arith(CN=H) 0001  A + ~(B) + 1", "Arith(CN=H) 0010  A", "Arith(CN=H) 0011  A + 1",
-		"Arith(CN=H) 0100  A - B - 1", "Arith(CN=H) 0101  A - B", "Arith(CN=H) 0110  B - A - 1", "Arith(CN=H) 0111  B - A",
-		"Arith(CN=H) 1000  B", "Arith(CN=H) 1001  B + 1", "Arith(CN=H) 1010  (placeholder)", "Arith(CN=H) 1011  (placeholder)",
-		"Arith(CN=H) 1100  0", "Arith(CN=H) 1101  1", "Arith(CN=H) 1110  (placeholder)", "Arith(CN=H) 1111  (placeholder)"
-	};
 
 	private static ( string Text, int OverlineStart, int OverlineLength ) ParseSingleOverline( string expression )
 	{
@@ -249,4 +228,64 @@ public partial class OperationSelector : UserControl
 
 		return ( before + inner + after, before.Length, inner.Length );
 	}
+
+	// ----------------------------
+	// Tables (6×16)
+	// IMPORTANT: Fill these according to your datasheet images.
+	// You can keep your old ones as starting point and replace texts.
+	// ----------------------------
+
+	private static readonly string[] s_logicActiveHigh =
+	{
+		// TODO: replace with the exact 16 logic rows from ACTIVE-HIGH DATA image (M=H)
+		"Logic 0000  ~(A)", "Logic 0001  ~(B)", "Logic 0010  A XOR B", "Logic 0011  A OR B",
+		"Logic 0100  A AND B", "Logic 0101  ~(A AND B)", "Logic 0110  A", "Logic 0111  B",
+		"Logic 1000  0", "Logic 1001  1", "Logic 1010  ~(A OR B)", "Logic 1011  A NAND B",
+		"Logic 1100  A NOR B", "Logic 1101  A XNOR B", "Logic 1110  A + B", "Logic 1111  (custom)"
+	};
+
+	private static readonly string[] s_logicActiveLow =
+	{
+		// TODO: replace with the exact 16 logic rows from ACTIVE-LOW DATA image (M=H)
+		"Logic 0000  ~(A)", "Logic 0001  ~(B)", "Logic 0010  A XOR B", "Logic 0011  A OR B",
+		"Logic 0100  A AND B", "Logic 0101  ~(A AND B)", "Logic 0110  A", "Logic 0111  B",
+		"Logic 1000  0", "Logic 1001  1", "Logic 1010  ~(A OR B)", "Logic 1011  A NAND B",
+		"Logic 1100  A NOR B", "Logic 1101  A XNOR B", "Logic 1110  A + B", "Logic 1111  (custom)"
+	};
+
+	private static readonly string[] s_arithActiveHigh_NoCarry_CnH =
+	{
+		// TODO: ACTIVE-HIGH DATA, M=L, Cn=H (no carry)
+		"Arith(CN=H) 0000  A + B + 1", "Arith(CN=H) 0001  A + ~(B) + 1", "Arith(CN=H) 0010  A", "Arith(CN=H) 0011  A + 1",
+		"Arith(CN=H) 0100  A - B - 1", "Arith(CN=H) 0101  A - B", "Arith(CN=H) 0110  B - A - 1", "Arith(CN=H) 0111  B - A",
+		"Arith(CN=H) 1000  B", "Arith(CN=H) 1001  B + 1", "Arith(CN=H) 1010  (placeholder)", "Arith(CN=H) 1011  (placeholder)",
+		"Arith(CN=H) 1100  0", "Arith(CN=H) 1101  1", "Arith(CN=H) 1110  (placeholder)", "Arith(CN=H) 1111  (placeholder)"
+	};
+
+	private static readonly string[] s_arithActiveHigh_WithCarry_CnL =
+	{
+		// TODO: ACTIVE-HIGH DATA, M=L, Cn=L (with carry)
+		"Arith(CN=L) 0000  A + B", "Arith(CN=L) 0001  A + ~(B)", "Arith(CN=L) 0010  A - 1", "Arith(CN=L) 0011  A",
+		"Arith(CN=L) 0100  A + 1", "Arith(CN=L) 0101  A - B", "Arith(CN=L) 0110  B - A", "Arith(CN=L) 0111  B",
+		"Arith(CN=L) 1000  A + B + 1", "Arith(CN=L) 1001  A + ~(B) + 1", "Arith(CN=L) 1010  (placeholder)", "Arith(CN=L) 1011  (placeholder)",
+		"Arith(CN=L) 1100  0", "Arith(CN=L) 1101  1", "Arith(CN=L) 1110  (placeholder)", "Arith(CN=L) 1111  (placeholder)"
+	};
+
+	private static readonly string[] s_arithActiveLow_NoCarry_CnL =
+	{
+		// TODO: ACTIVE-LOW DATA, M=L, Cn=L (no carry)
+		"Arith(CN=L) 0000  A + B", "Arith(CN=L) 0001  A + ~(B)", "Arith(CN=L) 0010  A - 1", "Arith(CN=L) 0011  A",
+		"Arith(CN=L) 0100  A + 1", "Arith(CN=L) 0101  A - B", "Arith(CN=L) 0110  B - A", "Arith(CN=L) 0111  B",
+		"Arith(CN=L) 1000  A + B + 1", "Arith(CN=L) 1001  A + ~(B) + 1", "Arith(CN=L) 1010  (placeholder)", "Arith(CN=L) 1011  (placeholder)",
+		"Arith(CN=L) 1100  0", "Arith(CN=L) 1101  1", "Arith(CN=L) 1110  (placeholder)", "Arith(CN=L) 1111  (placeholder)"
+	};
+
+	private static readonly string[] s_arithActiveLow_WithCarry_CnH =
+	{
+		// TODO: ACTIVE-LOW DATA, M=L, Cn=H (with carry)
+		"Arith(CN=H) 0000  A + B + 1", "Arith(CN=H) 0001  A + ~(B) + 1", "Arith(CN=H) 0010  A", "Arith(CN=H) 0011  A + 1",
+		"Arith(CN=H) 0100  A - B - 1", "Arith(CN=H) 0101  A - B", "Arith(CN=H) 0110  B - A - 1", "Arith(CN=H) 0111  B - A",
+		"Arith(CN=H) 1000  B", "Arith(CN=H) 1001  B + 1", "Arith(CN=H) 1010  (placeholder)", "Arith(CN=H) 1011  (placeholder)",
+		"Arith(CN=H) 1100  0", "Arith(CN=H) 1101  1", "Arith(CN=H) 1110  (placeholder)", "Arith(CN=H) 1111  (placeholder)"
+	};
 }

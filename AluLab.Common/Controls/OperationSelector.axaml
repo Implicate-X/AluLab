@@ -12,7 +12,7 @@
 			<Setter Property="BorderBrush" Value="#CCCCCC"/>
 			<Setter Property="BorderThickness" Value="1"/>
 			<Setter Property="CornerRadius" Value="8"/>
-			<Setter Property="Padding" Value="8"/>
+			<Setter Property="Padding" Value="6"/>
 		</Style>
 
 		<!-- Selected tile -->
@@ -26,29 +26,51 @@
 		<Style Selector="Border.op-tile:pointerover">
 			<Setter Property="Background" Value="#FFF3F3F3"/>
 		</Style>
+
+		<!-- Simple “slide toggle” look for ToggleSwitch -->
+		<Style Selector="ToggleSwitch.level-toggle">
+			<Setter Property="Width" Value="60"/>
+			<Setter Property="Height" Value="24"/>
+		</Style>
 	</UserControl.Styles>
 
 	<Border Background="#F7F7F7"
 			BorderBrush="#CCCCCC"
 			BorderThickness="1"
 			CornerRadius="8"
-			Padding="4"
+			Padding="8"
 			Width="228"
-			Height="120">
+			Height="128">
 		<StackPanel Spacing="4">
-			<TextBlock Text="Operation"
-					   FontWeight="SemiBold"
-					   FontSize="12"
-					   Foreground="#333333" />
+			<Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+				<TextBlock Grid.Column="0"
+						   Text="L"
+						   FontSize="11"
+						   VerticalAlignment="Center"
+						   Margin="0,0,6,0"/>
+
+				<ToggleSwitch Grid.Column="1"
+							  x:Name="ActiveLevelToggle"
+							  Classes="level-toggle"
+							  IsChecked="{Binding ActiveLowData, RelativeSource={RelativeSource AncestorType=c:OperationSelector}}"
+							  HorizontalAlignment="Center"
+							  VerticalAlignment="Center"/>
+
+				<TextBlock Grid.Column="2"
+						   Text="H"
+						   FontSize="11"
+						   VerticalAlignment="Center"
+						   Margin="6,0,0,0"/>
+			</Grid>
+
 			<UniformGrid x:Name="TilesGrid"
-						 Width="216"
-						 Height="84"
+						 Width="200"
+						 Height="90"
 						 Columns="4"
 						 Rows="4"
 						 Margin="0,2,0,0"
 						 HorizontalAlignment="Stretch"
-						 VerticalAlignment="Stretch"
-						 />
+						 VerticalAlignment="Stretch" />
 		</StackPanel>
 	</Border>
 </UserControl>

@@ -50,12 +50,13 @@
     <SdkLinkTarget>Blank</SdkLinkTarget>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\AluLab.Android\AluLab.Android.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Board\AluLab.Board.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Gateway\AluLab.Gateway.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Server\AluLab.Server.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Browser\AluLab.Browser.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Workbench\AluLab.Workbench.csproj" />
-<DocumentationSource sourceFile="..\AluLab.Common\AluLab.Common.csproj" /></DocumentationSources>
+      <DocumentationSource sourceFile="..\AluLab.Board\AluLab.Board.csproj" />
+      <DocumentationSource sourceFile="..\AluLab.Gateway\AluLab.Gateway.csproj" />
+      <DocumentationSource sourceFile="..\AluLab.Server\AluLab.Server.csproj" />
+      <DocumentationSource sourceFile="..\AluLab.Browser\AluLab.Browser.csproj" />
+      <DocumentationSource sourceFile="..\AluLab.Workbench\AluLab.Workbench.csproj" />
+      <DocumentationSource sourceFile="..\AluLab.Common\AluLab.Common.csproj" />
+    </DocumentationSources>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
@@ -88,4 +89,14 @@
     </PostBuildEvent>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <Image Include="alu_op_high_data.png">
+      <ImageId>alu_op_high_data</ImageId>
+      <AlternateText>alu op high data</AlternateText>
+    </Image>
+    <Image Include="alu_op_low_data.png">
+      <ImageId>alu_op_low_data</ImageId>
+      <AlternateText>alu op low data</AlternateText>
+    </Image>
+  </ItemGroup>
 </Project>
