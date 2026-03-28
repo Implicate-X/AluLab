@@ -4,5 +4,10 @@
              RequestedThemeVariant="Default">
   <Application.Styles>
     <FluentTheme />
+
+    <Style Selector="UniformGrid">
+      <Setter Property="TextBlock.HorizontalAlignment" Value="Center"/>
+      <Setter Property="TextBlock.VerticalAlignment" Value="Center"/>
+    </Style>
   </Application.Styles>
 </Application>

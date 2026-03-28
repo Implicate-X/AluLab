@@ -172,7 +172,9 @@
 				<c:OperationSelector x:Name="OperationSelector"
 								   HorizontalAlignment="Left"
 								   VerticalAlignment="Top"
-								   Margin="124,126,0,0"
+								   Width="228"
+								   Height="120"
+								   Margin="176,132,0,0"
 								   ZIndex="3"/>
 
 				<!-- Pin A3 -->

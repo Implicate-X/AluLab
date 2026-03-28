@@ -2,20 +2,54 @@
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="72"
+			 xmlns:c="clr-namespace:AluLab.Common.Controls"
+			 mc:Ignorable="d" d:DesignWidth="260" d:DesignHeight="220"
 			 x:Class="AluLab.Common.Controls.OperationSelector">
+	<UserControl.Styles>
+		<!-- Tile base -->
+		<Style Selector="Border.op-tile">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#CCCCCC"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Padding" Value="8"/>
+		</Style>
+
+		<!-- Selected tile -->
+		<Style Selector="Border.op-tile.selected">
+			<Setter Property="Background" Value="#FFDDEEFF"/>
+			<Setter Property="BorderBrush" Value="#FF2B78D6"/>
+			<Setter Property="BorderThickness" Value="2"/>
+		</Style>
+
+		<!-- Hover feedback -->
+		<Style Selector="Border.op-tile:pointerover">
+			<Setter Property="Background" Value="#FFF3F3F3"/>
+		</Style>
+	</UserControl.Styles>
+
 	<Border Background="#F7F7F7"
 			BorderBrush="#CCCCCC"
 			BorderThickness="1"
 			CornerRadius="8"
-			Padding="8">
-		<StackPanel Spacing="6" Width="240">
+			Padding="4"
+			Width="228"
+			Height="120">
+		<StackPanel Spacing="4">
 			<TextBlock Text="Operation"
 					   FontWeight="SemiBold"
 					   FontSize="12"
 					   Foreground="#333333" />
-			<ComboBox x:Name="OperationComboBox"
-					  HorizontalAlignment="Stretch" />
+			<UniformGrid x:Name="TilesGrid"
+						 Width="216"
+						 Height="84"
+						 Columns="4"
+						 Rows="4"
+						 Margin="0,2,0,0"
+						 HorizontalAlignment="Stretch"
+						 VerticalAlignment="Stretch"
+						 />
 		</StackPanel>
 	</Border>
 </UserControl>
+

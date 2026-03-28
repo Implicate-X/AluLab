@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>COOP/COEP Test</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+pre { background: #eee; padding: 10px; }
+</style>
+</head>
+<body>
+
+<h1>COOP / COEP / Service Worker Test</h1>
+
+<pre id="output">Check…</pre>
+
+<script>
+(async () => {
+    const out = [];
+
+    // 1. COOP / COEP Header check
+    out.push("Cross-Origin Isolation: " + (crossOriginIsolated ? "ACTIVE" : "NOT active"));
+
+    // 2. SharedArrayBuffer-Test
+    try {
+        new SharedArrayBuffer(8);
+        out.push("SharedArrayBuffer: allowed");
+    } catch {
+        out.push("SharedArrayBuffer: BLOCKED");
+    }
+
+    // 3. Service Worker check
+    if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (regs.length === 0) {
+            out.push("Service Worker: nothing registered");
+        } else {
+            out.push("Service Worker registered:");
+            regs.forEach(r => out.push(" - " + (r.active?.scriptURL || r.scope)));
+        }
+    } else {
+        out.push("Service Worker: not supported");
+    }
+
+    document.getElementById("output").textContent = out.join("\n");
+})();
+</script>
+
+</body>
+</html>
