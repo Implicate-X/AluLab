@@ -99,4 +99,7 @@
       <AlternateText>alu op low data</AlternateText>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="sn54ls181.pdf" />
+  </ItemGroup>
 </Project>
