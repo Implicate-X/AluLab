@@ -206,6 +206,10 @@ public partial class OperationSelector : UserControl
 		return ParseSingleOverline( opText );
 	}
 
+	/// <summary>
+	/// Supports exactly one segment in the form "~(X)".
+	/// The overline will span exactly the text X (after removing "~(" and ")").
+	/// </summary>
 	private static ( string Text, int OverlineStart, int OverlineLength ) ParseSingleOverline( string expression )
 	{
 		if( string.IsNullOrWhiteSpace( expression ) )
@@ -230,62 +234,126 @@ public partial class OperationSelector : UserControl
 	}
 
 	// ----------------------------
-	// Tables (6×16)
-	// IMPORTANT: Fill these according to your datasheet images.
-	// You can keep your old ones as starting point and replace texts.
+	// Tables (6×16) from Operation Tables.txt
 	// ----------------------------
-
-	private static readonly string[] s_logicActiveHigh =
-	{
-		// TODO: replace with the exact 16 logic rows from ACTIVE-HIGH DATA image (M=H)
-		"Logic 0000  ~(A)", "Logic 0001  ~(B)", "Logic 0010  A XOR B", "Logic 0011  A OR B",
-		"Logic 0100  A AND B", "Logic 0101  ~(A AND B)", "Logic 0110  A", "Logic 0111  B",
-		"Logic 1000  0", "Logic 1001  1", "Logic 1010  ~(A OR B)", "Logic 1011  A NAND B",
-		"Logic 1100  A NOR B", "Logic 1101  A XNOR B", "Logic 1110  A + B", "Logic 1111  (custom)"
-	};
 
 	private static readonly string[] s_logicActiveLow =
 	{
-		// TODO: replace with the exact 16 logic rows from ACTIVE-LOW DATA image (M=H)
-		"Logic 0000  ~(A)", "Logic 0001  ~(B)", "Logic 0010  A XOR B", "Logic 0011  A OR B",
-		"Logic 0100  A AND B", "Logic 0101  ~(A AND B)", "Logic 0110  A", "Logic 0111  B",
-		"Logic 1000  0", "Logic 1001  1", "Logic 1010  ~(A OR B)", "Logic 1011  A NAND B",
-		"Logic 1100  A NOR B", "Logic 1101  A XNOR B", "Logic 1110  A + B", "Logic 1111  (custom)"
-	};
-
-	private static readonly string[] s_arithActiveHigh_NoCarry_CnH =
-	{
-		// TODO: ACTIVE-HIGH DATA, M=L, Cn=H (no carry)
-		"Arith(CN=H) 0000  A + B + 1", "Arith(CN=H) 0001  A + ~(B) + 1", "Arith(CN=H) 0010  A", "Arith(CN=H) 0011  A + 1",
-		"Arith(CN=H) 0100  A - B - 1", "Arith(CN=H) 0101  A - B", "Arith(CN=H) 0110  B - A - 1", "Arith(CN=H) 0111  B - A",
-		"Arith(CN=H) 1000  B", "Arith(CN=H) 1001  B + 1", "Arith(CN=H) 1010  (placeholder)", "Arith(CN=H) 1011  (placeholder)",
-		"Arith(CN=H) 1100  0", "Arith(CN=H) 1101  1", "Arith(CN=H) 1110  (placeholder)", "Arith(CN=H) 1111  (placeholder)"
-	};
-
-	private static readonly string[] s_arithActiveHigh_WithCarry_CnL =
-	{
-		// TODO: ACTIVE-HIGH DATA, M=L, Cn=L (with carry)
-		"Arith(CN=L) 0000  A + B", "Arith(CN=L) 0001  A + ~(B)", "Arith(CN=L) 0010  A - 1", "Arith(CN=L) 0011  A",
-		"Arith(CN=L) 0100  A + 1", "Arith(CN=L) 0101  A - B", "Arith(CN=L) 0110  B - A", "Arith(CN=L) 0111  B",
-		"Arith(CN=L) 1000  A + B + 1", "Arith(CN=L) 1001  A + ~(B) + 1", "Arith(CN=L) 1010  (placeholder)", "Arith(CN=L) 1011  (placeholder)",
-		"Arith(CN=L) 1100  0", "Arith(CN=L) 1101  1", "Arith(CN=L) 1110  (placeholder)", "Arith(CN=L) 1111  (placeholder)"
+		"Logic 0000  ~(A)",
+		"Logic 0001  ~(AB)",
+		"Logic 0010  ~(A) + B",
+		"Logic 0011  1",
+		"Logic 0100  ~(A + B)",
+		"Logic 0101  B",
+		"Logic 0110  ~(A + B)",
+		"Logic 0111  A + B",
+		"Logic 1000  ~(A)B",
+		"Logic 1001  A + B",
+		"Logic 1010  B",
+		"Logic 1011  A + B",
+		"Logic 1100  0",
+		"Logic 1101  A~(B)",
+		"Logic 1110  AB",
+		"Logic 1111  A",
 	};
 
 	private static readonly string[] s_arithActiveLow_NoCarry_CnL =
 	{
-		// TODO: ACTIVE-LOW DATA, M=L, Cn=L (no carry)
-		"Arith(CN=L) 0000  A + B", "Arith(CN=L) 0001  A + ~(B)", "Arith(CN=L) 0010  A - 1", "Arith(CN=L) 0011  A",
-		"Arith(CN=L) 0100  A + 1", "Arith(CN=L) 0101  A - B", "Arith(CN=L) 0110  B - A", "Arith(CN=L) 0111  B",
-		"Arith(CN=L) 1000  A + B + 1", "Arith(CN=L) 1001  A + ~(B) + 1", "Arith(CN=L) 1010  (placeholder)", "Arith(CN=L) 1011  (placeholder)",
-		"Arith(CN=L) 1100  0", "Arith(CN=L) 1101  1", "Arith(CN=L) 1110  (placeholder)", "Arith(CN=L) 1111  (placeholder)"
+		"Arith(CN=L) 0000  A MINUS 1",
+		"Arith(CN=L) 0001  AB MINUS 1",
+		"Arith(CN=L) 0010  A~(B) MINUS 1",
+		"Arith(CN=L) 0011  MINUS 1 (2's COMP)",
+		"Arith(CN=L) 0100  A PLUS (A + ~(B))",
+		"Arith(CN=L) 0101  AB PLUS (A + ~(B))",
+		"Arith(CN=L) 0110  A MINUS B MINUS 1",
+		"Arith(CN=L) 0111  A + ~(B)",
+		"Arith(CN=L) 1000  A PLUS (A + B)",
+		"Arith(CN=L) 1001  A PLUS B",
+		"Arith(CN=L) 1010  A~(B) PLUS (A + B)",
+		"Arith(CN=L) 1011  (A + B)",
+		"Arith(CN=L) 1100  A PLUS A",
+		"Arith(CN=L) 1101  A~(B) PLUS A",
+		"Arith(CN=L) 1110  AB PLUS A",
+		"Arith(CN=L) 1111  A",
 	};
 
 	private static readonly string[] s_arithActiveLow_WithCarry_CnH =
 	{
-		// TODO: ACTIVE-LOW DATA, M=L, Cn=H (with carry)
-		"Arith(CN=H) 0000  A + B + 1", "Arith(CN=H) 0001  A + ~(B) + 1", "Arith(CN=H) 0010  A", "Arith(CN=H) 0011  A + 1",
-		"Arith(CN=H) 0100  A - B - 1", "Arith(CN=H) 0101  A - B", "Arith(CN=H) 0110  B - A - 1", "Arith(CN=H) 0111  B - A",
-		"Arith(CN=H) 1000  B", "Arith(CN=H) 1001  B + 1", "Arith(CN=H) 1010  (placeholder)", "Arith(CN=H) 1011  (placeholder)",
-		"Arith(CN=H) 1100  0", "Arith(CN=H) 1101  1", "Arith(CN=H) 1110  (placeholder)", "Arith(CN=H) 1111  (placeholder)"
+		"Arith(CN=H) 0000  A",
+		"Arith(CN=H) 0001  AB",
+		"Arith(CN=H) 0010  A~(B)",
+		"Arith(CN=H) 0011  ZERO",
+		"Arith(CN=H) 0100  A PLUS (A + ~(B)) PLUS 1",
+		"Arith(CN=H) 0101  AB PLUS (A + ~(B)) PLUS 1",
+		"Arith(CN=H) 0110  A MINUS B",
+		"Arith(CN=H) 0111  (A + ~(B)) PLUS 1",
+		"Arith(CN=H) 1000  A PLUS (A + B) PLUS 1",
+		"Arith(CN=H) 1001  A PLUS B PLUS 1",
+		"Arith(CN=H) 1010  A~(B) PLUS (A + B) PLUS 1",
+		"Arith(CN=H) 1011  (A + B) PLUS 1",
+		"Arith(CN=H) 1100  A PLUS A PLUS 1",
+		"Arith(CN=H) 1101  AB PLUS A PLUS 1",
+		"Arith(CN=H) 1110  A~(B) PLUS A PLUS 1",
+		"Arith(CN=H) 1111  A PLUS 1",
+	};
+
+	private static readonly string[] s_logicActiveHigh =
+	{
+		"Logic 0000  ~(A)",
+		"Logic 0001  A + B",
+		"Logic 0010  A + ~(B)",
+		"Logic 0011  0",
+		"Logic 0100  ~(AB)",
+		"Logic 0101  ~(B)",
+		"Logic 0110  A + B",
+		"Logic 0111  A~(B)",
+		"Logic 1000  ~(A) + B",
+		"Logic 1001  A + B",
+		"Logic 1010  B",
+		"Logic 1011  AB",
+		"Logic 1100  1",
+		"Logic 1101  A + ~(B)",
+		"Logic 1110  A + B",
+		"Logic 1111  A",
+	};
+
+	private static readonly string[] s_arithActiveHigh_NoCarry_CnH =
+	{
+		"Arith(CN=H) 0000  A",
+		"Arith(CN=H) 0001  A + B",
+		"Arith(CN=H) 0010  A + ~(B)",
+		"Arith(CN=H) 0011  MINUS 1 (2's COMPL)",
+		"Arith(CN=H) 0100  A PLUS A~(B)",
+		"Arith(CN=H) 0101  (A + B) PLUS A~(B)",
+		"Arith(CN=H) 0110  A MINUS B MINUS 1",
+		"Arith(CN=H) 0111  A~(B) MINUS 1",
+		"Arith(CN=H) 1000  A PLUS AB",
+		"Arith(CN=H) 1001  A PLUS B",
+		"Arith(CN=H) 1010  (A + ~(B)) PLUS AB",
+		"Arith(CN=H) 1011  AB MINUS 1",
+		"Arith(CN=H) 1100  A PLUS A",
+		"Arith(CN=H) 1101  (A + B) PLUS A",
+		"Arith(CN=H) 1110  (A + ~(B)) PLUS A",
+		"Arith(CN=H) 1111  A MINUS 1",
+	};
+
+	private static readonly string[] s_arithActiveHigh_WithCarry_CnL =
+	{
+		"Arith(CN=L) 0000  A PLUS 1",
+		"Arith(CN=L) 0001  (A + B) PLUS 1",
+		"Arith(CN=L) 0010  (A + ~(B)) PLUS 1",
+		"Arith(CN=L) 0011  ZERO",
+		"Arith(CN=L) 0100  A PLUS A~(B) PLUS 1",
+		"Arith(CN=L) 0101  (A + B) PLUS A~(B) PLUS 1",
+		"Arith(CN=L) 0110  A MINUS B",
+		"Arith(CN=L) 0111  A~(B)",
+		"Arith(CN=L) 1000  A PLUS AB PLUS 1",
+		"Arith(CN=L) 1001  A PLUS B PLUS 1",
+		"Arith(CN=L) 1010  (A + ~(B)) PLUS AB PLUS 1",
+		"Arith(CN=L) 1011  AB",
+		"Arith(CN=L) 1100  A PLUS A PLUS 1",
+		"Arith(CN=L) 1101  (A + B) PLUS A PLUS 1",
+		"Arith(CN=L) 1110  (A + ~(B)) PLUS A PLUS 1",
+		"Arith(CN=L) 1111  A",
 	};
 }

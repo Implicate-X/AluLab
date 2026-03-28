@@ -1,0 +1,107 @@
+﻿Active Low, M=H (Logic):
+~(A)
+~(AB)
+~(A) + B
+1
+~(A + B)
+B
+~(A + B)
+A + B
+~(A)B
+A + B
+B
+A + B
+0
+A~(B)
+AB
+A
+------------------------------
+Active Low, M=L, CN=L (Arith):
+A MINUS 1
+AB MINUS 1
+A~(B) MINUS 1
+MINUS 1 (2's COMP)
+A PLUS (A + ~(B))
+AB PLUS (A + ~(B))
+A MINUS B MINUS 1
+A + ~(B)
+A PLUS (A + B)
+A PLUS B
+A~(B) PLUS (A + B)
+(A + B)
+A PLUS A
+A~(B) PLUS A
+AB PLUS A
+A
+------------------------------
+Active Low, M=L, CN=H (Arith):
+A
+AB
+A~(B)
+ZERO
+A PLUS (A + ~(B)) PLUS 1
+AB PLUS (A + ~(B)) PLUS 1
+A MINUS B
+(A + ~(B)) PLUS 1
+A PLUS (A + B) PLUS 1
+A PLUS B PLUS 1
+A~(B) PLUS (A + B) PLUS 1
+(A + B) PLUS 1
+A PLUS A PLUS 1
+AB PLUS A PLUS 1
+A~(B) PLUS A PLUS 1
+A PLUS 1
+------------------------------
+Active High, M=H (Logic):
+~(A)
+A + B
+A + ~(B)
+0
+~(AB)
+~(B)
+A + B
+A~(B)
+~(A) + B
+A + B
+B
+AB
+1
+A + ~(B)
+A + B
+A
+------------------------------
+Active High, M=L, CN=H (Arith):
+A
+A + B
+A + ~(B)
+MINUS 1 (2's COMPL)
+A PLUS A~(B)
+(A + B) PLUS A~(B)
+A MINUS B MINUS 1
+A~(B) MINUS 1
+A PLUS AB
+A PLUS B
+(A + ~(B)) PLUS AB
+AB MINUS 1
+A PLUS A
+(A + B) PLUS A
+(A + ~(B)) PLUS A
+A MINUS 1
+------------------------------
+Active High, M=L, CN=L (Arith):
+A PLUS 1
+(A + B) PLUS 1
+(A + ~(B)) PLUS 1
+ZERO
+A PLUS A~(B) PLUS 1
+(A + B) PLUS A~(B) PLUS 1
+A MINUS B
+A~(B)
+A PLUS AB PLUS 1
+A PLUS B PLUS 1
+(A + ~(B)) PLUS AB PLUS 1
+AB
+A PLUS A PLUS 1
+(A + B) PLUS A PLUS 1
+(A + ~(B)) PLUS A PLUS 1
+A

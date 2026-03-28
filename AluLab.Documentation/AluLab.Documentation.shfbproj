@@ -102,4 +102,7 @@
   <ItemGroup>
     <None Include="sn54ls181.pdf" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Operation Tables.txt" />
+  </ItemGroup>
 </Project>
