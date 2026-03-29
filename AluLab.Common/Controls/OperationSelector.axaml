@@ -3,7 +3,7 @@
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:c="clr-namespace:AluLab.Common.Controls"
-			 mc:Ignorable="d" d:DesignWidth="260" d:DesignHeight="220"
+			 mc:Ignorable="d" d:DesignWidth="228" d:DesignHeight="120"
 			 x:Class="AluLab.Common.Controls.OperationSelector">
 	<UserControl.Styles>
 		<!-- Tile base -->
@@ -26,12 +26,6 @@
 		<Style Selector="Border.op-tile:pointerover">
 			<Setter Property="Background" Value="#FFF3F3F3"/>
 		</Style>
-
-		<!-- Simple “slide toggle” look for ToggleSwitch -->
-		<Style Selector="ToggleSwitch.level-toggle">
-			<Setter Property="Width" Value="60"/>
-			<Setter Property="Height" Value="24"/>
-		</Style>
 	</UserControl.Styles>
 
 	<Border Background="#F7F7F7"
@@ -40,38 +34,16 @@
 			CornerRadius="8"
 			Padding="8"
 			Width="228"
-			Height="128">
-		<StackPanel Spacing="4">
-			<Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-				<TextBlock Grid.Column="0"
-						   Text="L"
-						   FontSize="11"
-						   VerticalAlignment="Center"
-						   Margin="0,0,6,0"/>
+			Height="120">
 
-				<ToggleSwitch Grid.Column="1"
-							  x:Name="ActiveLevelToggle"
-							  Classes="level-toggle"
-							  IsChecked="{Binding ActiveLowData, RelativeSource={RelativeSource AncestorType=c:OperationSelector}}"
-							  HorizontalAlignment="Center"
-							  VerticalAlignment="Center"/>
-
-				<TextBlock Grid.Column="2"
-						   Text="H"
-						   FontSize="11"
-						   VerticalAlignment="Center"
-						   Margin="6,0,0,0"/>
-			</Grid>
-
-			<UniformGrid x:Name="TilesGrid"
-						 Width="200"
-						 Height="90"
-						 Columns="4"
-						 Rows="4"
-						 Margin="0,2,0,0"
-						 HorizontalAlignment="Stretch"
-						 VerticalAlignment="Stretch" />
-		</StackPanel>
+		<UniformGrid x:Name="TilesGrid"
+					 Width="216"
+					 Height="90"
+					 Columns="4"
+					 Rows="4"
+					 Margin="0,2,0,0"
+					 HorizontalAlignment="Stretch"
+					 VerticalAlignment="Stretch" />
 	</Border>
 </UserControl>
 

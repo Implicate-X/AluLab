@@ -27,6 +27,54 @@
 			<Setter Property="HorizontalAlignment" Value="Center"/>
 			<Setter Property="VerticalAlignment" Value="Center"/>
 		</Style>
+
+		<!-- Simple slide toggle look for ToggleSwitch -->
+		<Style Selector="ToggleSwitch.level-toggle">
+			<Setter Property="Width" Value="60"/>
+			<Setter Property="Height" Value="24"/>
+		</Style>
+
+		<!-- Active level segmented group -->
+		<Style Selector="StackPanel.active-level-toggle">
+			<Setter Property="Spacing" Value="0"/>
+		</Style>
+
+		<Style Selector="StackPanel.active-level-toggle > RadioButton">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Foreground" Value="Black"/>
+			<Setter Property="Padding" Value="6,3"/>
+			<Setter Property="MinWidth" Value="26"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+
+		<!-- Base look -->
+		<Style Selector="StackPanel.active-level-toggle > RadioButton /template/ Border#PART_Background">
+			<Setter Property="Background" Value="#FFF7F7F7"/>
+			<Setter Property="BorderBrush" Value="#CCB0B0B0"/>
+			<Setter Property="BorderThickness" Value="1"/>
+		</Style>
+
+		<!-- Selected -->
+		<Style Selector="StackPanel.active-level-toggle > RadioButton:checked /template/ Border#PART_Background">
+			<Setter Property="Background" Value="#FFDDEEFF"/>
+			<Setter Property="BorderBrush" Value="#FF2B78D6"/>
+		</Style>
+
+		<!-- Rounded corners for top/bottom options -->
+		<Style Selector="StackPanel.active-level-toggle > RadioButton:first-child /template/ Border#PART_Background">
+			<Setter Property="CornerRadius" Value="6,6,0,0"/>
+		</Style>
+
+		<Style Selector="StackPanel.active-level-toggle > RadioButton:last-child /template/ Border#PART_Background">
+			<Setter Property="CornerRadius" Value="0,0,6,6"/>
+		</Style>
+
+		<!-- Hover -->
+		<Style Selector="StackPanel.active-level-toggle > RadioButton:pointerover /template/ Border#PART_Background">
+			<Setter Property="Background" Value="#FFF0F0F0"/>
+		</Style>
+
 	</UserControl.Styles>
 
 	<Grid>
@@ -149,6 +197,23 @@
 									  ZIndex="2"
 									  Value="0"
 									  Color="DodgerBlue"/>
+
+				<!-- Active Level (between OperandA and OperandB) -->
+				<StackPanel
+					HorizontalAlignment="Left"
+					VerticalAlignment="Top"
+					Margin="230,64,0,0"
+					ZIndex="3"
+					Classes="active-level-toggle">
+
+					<RadioButton Content="L"
+								GroupName="ActiveLevel"
+								IsChecked="{Binding #OperationSelector.ActiveLowData, Mode=TwoWay}" />
+
+					<RadioButton Content="H"
+								GroupName="ActiveLevel"
+								IsChecked="{Binding !#OperationSelector.ActiveLowData}" />
+				</StackPanel>
 
 				<!-- Operand B -->
 				<c:LED7SegmentsModule x:Name="OperandB"

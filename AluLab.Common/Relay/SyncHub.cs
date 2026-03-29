@@ -78,7 +78,8 @@ public class SyncHub : Hub
 		"A0","A1","A2","A3",
 		"B0","B1","B2","B3",
 		"S0","S1","S2","S3",
-		"CN","M"
+		"CN","M",
+		"ALD"
 	};
 
 	/// <summary>

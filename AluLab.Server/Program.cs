@@ -14,9 +14,13 @@
 using System.Text;
 using AluLab.Common.Relay;
 using AluLab.Common.Services;
+using AluLab.Server.Api;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder( args );
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Configure SignalR with a custom invocation log filter and JSON protocol settings.
 builder.Services
@@ -60,6 +64,9 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseCors();
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 // Map the SignalR hub for real-time pin state updates.
 app.MapHub<SyncHub>( "/sync" ).RequireCors();
 
@@ -75,6 +82,83 @@ app.MapGet( "/sync/info", () => "Sync hub is available at /sync for SignalR clie
 
 // Endpoint: Returns a basic status message with the current server time.
 app.MapGet( "/", () => "AluLab IoT " + DateTime.Now.ToString() );
+
+// --- ALU simulation API (real hardware via SyncHub) ---
+app.MapPost( "/api/alu/evaluate", async (
+	AluSimRequest req,
+	IHubContext<SyncHub> hub,
+	SyncStateStore store,
+	CancellationToken ct ) =>
+{
+	try
+	{
+		AluSim.ValidateRequest( req );
+
+		var (_, beforeRaw) = store.GetSnapshot();
+
+		// 1) Distribute ActiveLowData mode to all clients (as a pseudo input pin).
+		await hub.Clients.All.SendAsync( "PinToggled", "ALD", req.ActiveLowData, ct );
+
+		// 2) Distribute inputs as pin toggles (signal levels on the wire).
+		static bool GetLevel( bool logicalBit, bool activeLowData )
+			=> activeLowData ? !logicalBit : logicalBit;
+
+		static Task SendNibbleAsync( IHubContext<SyncHub> hub, string prefix, int value, bool ald, CancellationToken ct )
+		{
+			var tasks = new Task[ 4 ];
+			for( var i = 0; i < 4; i++ )
+			{
+				var logicalBit = ( ( value >> i ) & 1 ) != 0;
+				var level = GetLevel( logicalBit, ald );
+				tasks[ i ] = hub.Clients.All.SendAsync( "PinToggled", $"{prefix}{i}", level, ct );
+			}
+			return Task.WhenAll( tasks );
+		}
+
+		await SendNibbleAsync( hub, "A", req.A & 0xF, req.ActiveLowData, ct );
+		await SendNibbleAsync( hub, "B", req.B & 0xF, req.ActiveLowData, ct );
+		await SendNibbleAsync( hub, "S", req.S & 0xF, req.ActiveLowData, ct );
+
+		await hub.Clients.All.SendAsync( "PinToggled", "M", GetLevel( req.ModeM, req.ActiveLowData ), ct );
+		await hub.Clients.All.SendAsync( "PinToggled", "CN", GetLevel( req.CarryInCn, req.ActiveLowData ), ct );
+
+		// 3) Wait (briefly) for the hardware client to report new outputs via ReportAluOutputs(raw,...).
+		var timeout = TimeSpan.FromMilliseconds( 750 );
+		var pollInterval = TimeSpan.FromMilliseconds( 15 );
+		var sw = System.Diagnostics.Stopwatch.StartNew();
+
+		byte? raw = null;
+		while( sw.Elapsed < timeout && !ct.IsCancellationRequested )
+		{
+			var (_, currentRaw) = store.GetSnapshot();
+			if( currentRaw is not null && currentRaw != beforeRaw )
+			{
+				raw = currentRaw;
+				break;
+			}
+
+			await Task.Delay( pollInterval, ct );
+		}
+
+		// If nothing new arrived, fall back to last known value (can still be useful).
+		if( raw is null )
+			raw = store.GetSnapshot().LastOutputsRaw;
+
+		if( raw is null )
+			return Results.BadRequest( new { error = "No ALU outputs available yet (no client reported outputs)." } );
+
+		// 4) Decode raw -> logical output values. (raw bits are assumed to be signal levels.)
+		var decoded = AluSim.DecodeOutputsRawToLogical( raw.Value, req.ActiveLowData );
+
+		return Results.Ok( decoded );
+	}
+	catch( Exception ex )
+	{
+		return Results.BadRequest( new { error = ex.Message } );
+	}
+} )
+.WithName( "AluEvaluate" )
+.WithTags( "ALU" );
 
 // Endpoint: Returns a list of all registered routes for debugging purposes.
 app.MapGet( "/debug/routes", ( EndpointDataSource ds ) =>

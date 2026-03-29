@@ -5,8 +5,8 @@
 1
 ~(A + B)
 B
-~(A + B)
-A + B
+~(A⊕B)
+A+B
 ~(A)B
 A + B
 B
@@ -104,4 +104,43 @@ AB
 A PLUS A PLUS 1
 (A + B) PLUS A PLUS 1
 (A + ~(B)) PLUS A PLUS 1
+A
+
+==================================
+
+Active Low, M=H (Logic):
+~(A)
+~(A∧B)
+~(A)∨B
+1
+~(A∨B)
+B
+~(A⊕B)
+A∨B
+~(A)∧B
+A∨B
+B
+A∨B
+0
+A∧~(B)
+A∧B
+A
+
+
+
+A ⊟ ~(1)
+AB ⊟ ~(1)
+A~(B) ⊟ ~(1)
+~(1)
+A ⊞ (A + ~(B))
+AB ⊞ (A + ~(B))
+A ⊟ B ⊟ ~(1)
+A + ~(B)
+A ⊞ (A + B)
+A ⊞ B
+A~(B) ⊞ (A + B)
+(A + B)
+A ⊞ A
+A~(B) ⊞ A
+AB ⊞ A
 A

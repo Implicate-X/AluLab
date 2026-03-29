@@ -32,6 +32,20 @@ namespace AluLab.Board.Alu
 		private readonly CancellationTokenSource? _cts = null;
 
 		/// <summary>
+		/// When true, the *data* signals are treated as active-low at the boundary (A/B/S/M/CN and F/P/G/CN4/A==B).
+		/// This is controlled remotely via the pseudo pin "ALD".
+		/// </summary>
+		private bool _activeLowData;
+
+		private static readonly HashSet<string> s_dataPins = new( StringComparer.OrdinalIgnoreCase )
+		{
+			"A0","A1","A2","A3",
+			"B0","B1","B2","B3",
+			"S0","S1","S2","S3",
+			"CN","M"
+		};
+
+		/// <summary>
 		/// Represents the current ALU output state in multiple representations.
 		/// </summary>
 		/// <param name="Raw">Raw value (byte) of the read output lines. </param>
@@ -58,37 +72,12 @@ namespace AluLab.Board.Alu
 			string V2PortBBinary,
 			string V2PortBHex );
 
-		/// <summary>
-		/// Triggered as soon as outputs have been read (e.g., after <see cref="ReadOutputs"/> or <see cref="ApplyPinToHardware"/>).
-		/// </summary>
 		public event Action<AluOutputs>? OutputsUpdated;
-
-		/// <summary>
-		/// Triggered when a complete snapshot of ALU state (V1 and V2 outputs) has been read.
-		/// </summary>
 		public event Action<AluSnapshot>? SnapshotUpdated;
-
-		/// <summary>
-		/// Triggered when the <see cref="SyncClient"/> receives a remote input event (pin + state).
-		/// </summary>
-		/// <remarks>
-		/// This event only signals the remote input; the actual hardware update occurs afterwards
-		/// (see handler in <see cref="ConfigureSync"/>).
-		/// </remarks>
 		public event Action<string, bool>? RemotePinToggled;
 
-		/// <summary>
-		/// Optional client for synchronizing inputs/outputs via a hub.
-		/// </summary>
 		private SyncClient? _syncClient;
 
-		/// <summary>
-		/// Maps logical pin names (e.g., “A0,” “S3”) to (port, bit mask) for writing to the hardware.
-		/// </summary>
-		/// <remarks>
-		/// Pins that are not included in this map are considered unknown or read-only in this context
-		/// and are not written to the hardware.
-		/// </remarks>
 		private static readonly Dictionary<string, (Port Port, byte Mask)> s_pinMap =
 		new()
 		{
@@ -111,20 +100,6 @@ namespace AluLab.Board.Alu
 			[ "M" ] = (Port.PortB, V1SignalOutALU.PortB.M)
 		};
 
-		/// <summary>
-		/// Configures synchronization via a hub and starts <see cref="SyncClient"/> in the background.
-		/// </summary>
-		/// <param name="hubUrl">URL of the SyncHub. Empty/whitespace values are ignored.</param>
-		/// <param name="logger">Optional logger for the <see cref="SyncClient"/> (fallback: controller logger).</param>
-		/// <remarks>
-		/// <para> If synchronization is already active, it is first terminated via <c>StopSync()</c>. </para>
-		/// <para> Incoming remote pin toggles are:
-		/// <list type="number">
-		/// <item><description>signaled as an event via <see cref="RemotePinToggled"/> to local listeners,</description></item>
-		/// <item><description>applied to the hardware without sending the input event back to the hub (to avoid echo),</description></item>
-		/// <item><description>and the subsequently read outputs are reported to the hub.</description></item>
-		/// </list></para>
-		/// </remarks>
 		public void ConfigureSync( string hubUrl, ILogger? logger = null )
 		{
 			if( string.IsNullOrWhiteSpace( hubUrl ) ) return;
@@ -173,13 +148,6 @@ namespace AluLab.Board.Alu
 			}
 		}
 
-		/// <summary>
-		/// Stops active synchronization, terminates the <see cref="SyncClient"/>, and releases resources.
-		/// </summary>
-		/// <remarks>
-		/// Stopping/disposing is deliberately performed asynchronously in the background so that callers are not blocked.
-		/// Errors are logged but not thrown externally.
-		/// </remarks>
 		private void StopSync()
 		{
 			if( _syncClient == null ) return;
@@ -203,16 +171,8 @@ namespace AluLab.Board.Alu
 			}
 		}
 
-		/// <summary>
-		/// Reads the current output state of the ALU and signals it via <see cref="OutputsUpdated"/>.
-		/// </summary>
-		/// <returns>An <see cref="AluOutputs"/> snapshot (Raw/Binary/Hex).</returns>
-		/// <remarks>
-		/// The outputs are read from the GPIO register on <see cref="Port.PortB"/>.
-		/// </remarks>
 		public AluOutputs ReadOutputs()
 		{
-
 			byte rawV1PortA = _v1.ReadRegisterSafe( Register.GPIO, Port.PortA );
 			byte rawV1PortB = _v1.ReadRegisterSafe( Register.GPIO, Port.PortB );
 			byte rawV2PortB = _v2.ReadRegisterSafe( Register.GPIO, Port.PortB );
@@ -246,27 +206,6 @@ namespace AluLab.Board.Alu
 			return outV2PortB;
 		}
 
-		/// <summary>
-		/// Writes an input signal to the real hardware and then immediately reads back the outputs.
-		/// <paramref name="forwardInputToSync"/> controls whether the input event is sent to the hub (to avoid echo).
-		/// <paramref name="reportOutputsToSync"/> controls whether outputs are reported to the hub (so that all clients update).
-		/// </summary>
-		/// <param name="pinName">Logical pin name (e.g., “A0”, “S3”).</param>
-		/// <param name="state"><see langword="true"/> to set, <see langword="false"/> to reset.</param>
-		/// <param name="forwardInputToSync"> If <see langword="true"/>, the input event is sent to the SyncHub (for other clients).
-		/// For remote calls, this value should typically be <see langword="false"/> to avoid echo. </param>
-		/// <param name="reportOutputsToSync"> If <see langword="true"/>, the output snapshot is reported 
-		/// to the SyncHub after writing and reading the outputs so that other clients can update their display. </param>
-		/// <remarks>
-		/// Procedure:
-		/// <list type="number">
-		/// <item><description>Resolve pin in <see cref="s_pinMap"/> (unknown/read-only is only optionally passed on to Sync).</description></item>
-		/// <item><description>Set/reset bit on hardware (via <see cref="SetOrResetPort"/>).</description></item>
-		/// <item><description>Optionally send input event to SyncHub.</description></item>
-		/// <item><description>Read outputs (via <see cref="ReadOutputs"/>) and signal locally.</description></item>
-		/// <item><description>Optionally report outputs to SyncHub.</description></item>
-		/// </list>
-		/// </remarks>
 		public void ApplyPinToHardware(
 			string pinName,
 			bool state,
@@ -279,6 +218,30 @@ namespace AluLab.Board.Alu
 
 			try
 			{
+				// Pseudo input pin: ActiveLowData toggle (remote-settable)
+				if( string.Equals( pinName, "ALD", StringComparison.OrdinalIgnoreCase ) )
+				{
+					_activeLowData = state;
+					_logger.LogInformation( "ActiveLowData set to {ActiveLowData}", _activeLowData );
+
+					if( forwardInputToSync )
+						_ = _syncClient?.SendPinToggledAsync( "ALD", state );
+
+					// No hardware IO line to set; but emit outputs so UIs refresh consistently.
+					if( reportOutputsToSync )
+					{
+						AluOutputs aluOutputs = ReadOutputs();
+						try { _ = _syncClient?.ReportAluOutputsAsync( aluOutputs.Raw, aluOutputs.Binary, aluOutputs.Hex ); }
+						catch( Exception ex ) { _logger.LogWarning( ex, "Failed to report ALU outputs to SyncHub: {Message}", ex.Message ); }
+					}
+
+					return;
+				}
+
+				// Incoming state is a *signal level* on the wire (HIGH/LOW).
+				// If ActiveLowData is enabled, invert the physical level we apply for data pins.
+				var hwLevel = ( _activeLowData && s_dataPins.Contains( pinName ) ) ? !state : state;
+
 				if( !s_pinMap.TryGetValue( pinName, out var entry ) )
 				{
 					_logger.LogWarning( "ApplyPinToHardware: unknown or read-only pin '{Pin}'", pinName );
@@ -288,7 +251,7 @@ namespace AluLab.Board.Alu
 				}
 
 				// 1) Write input to real hardware
-				SetOrResetPort( entry.Port, entry.Mask, state );
+				SetOrResetPort( entry.Port, entry.Mask, hwLevel );
 
 				// 2) Distribute input to Sync (other clients), if desired
 				if( forwardInputToSync )
@@ -313,12 +276,6 @@ namespace AluLab.Board.Alu
 			}
 		}
 
-		/// <summary>
-		/// Auxiliary method for setting or resetting a bit on an MCP23xxx port.
-		/// </summary>
-		/// <param name="port">Target port (<see cref="Port.PortA"/> or <see cref="Port.PortB"/>).</param>
-		/// <param name="mask">Bit mask of the pin to be manipulated.</param>
-		/// <param name="state"><see langword="true"/> = set, <see langword="false"/> = reset.
 		private void SetOrResetPort( Port port, byte mask, bool state )
 		{
 			Debug.WriteLine( $"SetOrResetPort: Port={port}, Mask=0b{Convert.ToString( mask, 2 ).PadLeft( 8, '0' )}, State={state}" );
@@ -328,9 +285,6 @@ namespace AluLab.Board.Alu
 				_v1.ResetPort( port, mask );
 		}
 
-		/// <summary>
-		/// Terminates any active synchronization and releases all resources used.
-		/// </summary>
 		public void Dispose()
 		{
 			StopSync();
@@ -339,18 +293,6 @@ namespace AluLab.Board.Alu
 			_v2?.Dispose();
 		}
 
-		/// <summary>
-		/// Applies the specified synchronization state to the hardware outputs.
-		/// </summary>
-		/// <param name="state">The synchronization state to apply.</param>
-		/// <remarks>
-		/// <para>
-		/// This method directly sets the hardware outputs according to the provided <see cref="SyncState"/>.
-		/// </para>
-		/// <para>
-		/// Pins that are not part of the synchronization state are untouched.
-		/// </para>
-		/// </remarks>
 		public void ApplySyncStateToHardware( SyncState state )
 		{
 			if( state is null )

@@ -10,4 +10,8 @@
     <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
 </Project>
