@@ -275,7 +275,14 @@ sealed class Program
 
 		try
 		{
-			BuildAvaloniaApp().StartWithClassicDesktopLifetime( args );
+			var builder = BuildAvaloniaApp();
+
+			builder.ConfigureFonts( fontManager =>
+			{
+				fontManager.AddFontCollection( new FontCollection() );
+			} );
+
+			builder.StartWithClassicDesktopLifetime( args );
 		}
 		finally
 		{

@@ -200,19 +200,19 @@
 
 				<!-- Active Level (between OperandA and OperandB) -->
 				<StackPanel
-					HorizontalAlignment="Left"
-					VerticalAlignment="Top"
-					Margin="230,64,0,0"
-					ZIndex="3"
-					Classes="active-level-toggle">
+				HorizontalAlignment="Left"
+				VerticalAlignment="Top"
+				Margin="230,64,0,0"
+				ZIndex="3"
+				Classes="active-level-toggle">
 
 					<RadioButton Content="L"
-								GroupName="ActiveLevel"
-								IsChecked="{Binding #OperationSelector.ActiveLowData, Mode=TwoWay}" />
+								 GroupName="ActiveLevel"
+								 IsChecked="{Binding #OperationSelector.ActiveLowData, Mode=TwoWay}" />
 
 					<RadioButton Content="H"
-								GroupName="ActiveLevel"
-								IsChecked="{Binding !#OperationSelector.ActiveLowData}" />
+								 GroupName="ActiveLevel"
+								 IsChecked="{Binding !#OperationSelector.ActiveLowData}" />
 				</StackPanel>
 
 				<!-- Operand B -->
@@ -233,14 +233,43 @@
 									  Value="0"
 									  Color="LimeGreen"/>
 
+				<TextBlock Name="Notes"
+						   FontSize="6"
+						   FontWeight="Normal"
+						   Foreground="Black"
+						   ZIndex="3"
+						   Margin="80,128,0,0"
+						   HorizontalAlignment="Left"
+						   VerticalAlignment="Top"
+						   FontFamily="{Binding #HousingControl.NotesFontFamily}">
+					
+					<Run Text="Legende:"/>
+					<LineBreak/>
+					<Run Text="∨ = OR"/>
+					<LineBreak/>
+					<Run Text="∧ = AND"/>
+					<LineBreak/>
+					<Run Text="⊻ = XOR"/>
+					<LineBreak/>
+					<Run Text="+ = Echte Addition"/>
+					<LineBreak/>
+					<Run Text="⊞ = Interne Addition"/>
+					<LineBreak/>
+					<Run Text="⊟ = Interne Substraktion"/>
+					<LineBreak/>
+					<Run Text="+₁= Addition mit Carry"/>
+					<LineBreak/>
+				</TextBlock>
+
 				<!-- Operation Select S -->
 				<c:OperationSelector x:Name="OperationSelector"
-								   HorizontalAlignment="Left"
-								   VerticalAlignment="Top"
-								   Width="228"
-								   Height="120"
-								   Margin="176,132,0,0"
-								   ZIndex="3"/>
+									 HorizontalAlignment="Left"
+									 VerticalAlignment="Top"
+									 Width="228"
+									 Height="120"
+									 Margin="176,132,0,0"
+									 ZIndex="3"
+									 />
 
 				<!-- Pin A3 -->
 				<StackPanel HorizontalAlignment="Left"

@@ -76,6 +76,10 @@ public partial class OperationSelector : UserControl
 
 	private void RebuildTiles()
 	{
+		FontFamily fontFamily = OperatingSystem.IsBrowser()
+		? new FontFamily( "fonts:AluLabFonts#DejaVu" )
+		: new FontFamily( "fonts:AluLabFonts#DejaVu#Sans" );
+
 		var grid = GetTilesGrid();
 		if( grid is null )
 			return;
@@ -97,14 +101,14 @@ public partial class OperationSelector : UserControl
 				Text = tileText,
 				OverlineStart = overStart,
 				OverlineLength = overLen,
-				FontFamily = new FontFamily( "Consolas" ),
+				FontFamily = fontFamily,
 				FontSize = 8,
 				Foreground = Brushes.Black,
 				OverlineThickness = 0.5,
 				OverlineOffset = 0.5,
 				HorizontalAlignment = HorizontalAlignment.Center,
 				VerticalAlignment = VerticalAlignment.Center,
-				Margin = new Thickness( 0, -4, 0, 0 )
+				Margin = new Thickness( 0, -4, 0, 0 ),
 			};
 
 			var tile = new Border
@@ -245,10 +249,10 @@ public partial class OperationSelector : UserControl
 		"Logic 0011  1",
 		"Logic 0100  ~(A∨B)",
 		"Logic 0101  ~(B)",
-		"Logic 0110  ~(A⊕B)",
+		"Logic 0110  ~(A⊻B)",
 		"Logic 0111  A∨B",
 		"Logic 1000  ~(A)∧B",
-		"Logic 1001  A⊕B",
+		"Logic 1001  A⊻B",
 		"Logic 1010  B",
 		"Logic 1011  A∨B",
 		"Logic 1100  0",
@@ -300,20 +304,20 @@ public partial class OperationSelector : UserControl
 	private static readonly string[] s_logicActiveHigh =
 	{
 		"Logic 0000  ~(A)",
-		"Logic 0001  A + B",
-		"Logic 0010  A + ~(B)",
+		"Logic 0001  A∨B",
+		"Logic 0010  A∨~(B)",
 		"Logic 0011  0",
-		"Logic 0100  ~(AB)",
+		"Logic 0100  ~(A∧B)",
 		"Logic 0101  ~(B)",
-		"Logic 0110  A + B",
-		"Logic 0111  A~(B)",
-		"Logic 1000  ~(A) + B",
-		"Logic 1001  A + B",
+		"Logic 0110  A⊻B",
+		"Logic 0111  A∧~(B)",
+		"Logic 1000  ~(A)∨B",
+		"Logic 1001  ~(A⊻B)",
 		"Logic 1010  B",
-		"Logic 1011  AB",
+		"Logic 1011  A∧B",
 		"Logic 1100  1",
-		"Logic 1101  A + ~(B)",
-		"Logic 1110  A + B",
+		"Logic 1101  A∨~(B)",
+		"Logic 1110  A∨B",
 		"Logic 1111  A",
 	};
 

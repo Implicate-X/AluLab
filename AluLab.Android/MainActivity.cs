@@ -3,6 +3,7 @@ using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
 using AluLab.Common;
+using Avalonia.Media;
 
 namespace AluLab.Android;
 
@@ -17,8 +18,8 @@ namespace AluLab.Android;
 [Activity(
   Label = "AluLab.Android",
   Theme = "@style/MyTheme.NoActionBar",
-  Icon = "@drawable/icon",
-  MainLauncher = true,
+  Icon = "@drawable/implicatex",
+  MainLauncher = false,
   ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode )]
 public class MainActivity : AvaloniaMainActivity<App>
 {
@@ -31,6 +32,11 @@ public class MainActivity : AvaloniaMainActivity<App>
 	protected override AppBuilder CustomizeAppBuilder( AppBuilder builder )
 	{
 		return base.CustomizeAppBuilder( builder )
-		  .WithInterFont();
+		  .WithInterFont()
+		  .AfterSetup( _ =>
+			{
+				FontManager.Current.AddFontCollection( new FontCollection() );
+			} );
+
 	}
 }

@@ -7,11 +7,13 @@
     <PublishTrimmed>true</PublishTrimmed>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="wwwroot\favicon.ico" />
     <Content Remove="wwwroot\implicate-x-logo.ico" />
     <Content Remove="wwwroot\implicate-x-logo.svg" />
   </ItemGroup>
+
   <ItemGroup>
     <AvaloniaResource Include="wwwroot\favicon.ico" />
     <AvaloniaResource Include="wwwroot\implicate-x-logo.ico" />
@@ -25,5 +27,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\fonts\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="wwwroot\fonts\**\*.ttf" />
   </ItemGroup>
 </Project>

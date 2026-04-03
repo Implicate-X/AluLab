@@ -115,7 +115,6 @@ sealed class Program
 		{
 			var builder = BuildAvaloniaApp();
 
-			// Workbench-spezifisch: Fensterposition/-größe persistieren.
 			builder.AfterSetup( b =>
 			{
 				if( b.Instance is not App app )
@@ -126,6 +125,11 @@ sealed class Program
 					var placement = app.Services.GetRequiredService<WindowPlacementService>();
 					placement.Attach( window );
 				};
+			} );
+
+			builder.ConfigureFonts( fontManager =>
+			{
+				fontManager.AddFontCollection( new FontCollection() );
 			} );
 
 			builder.StartWithClassicDesktopLifetime( args );

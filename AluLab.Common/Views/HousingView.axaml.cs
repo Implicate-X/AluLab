@@ -123,6 +123,10 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 		private set => SetProperty( ref _logsText, value );
 	}
 
+	private FontFamily _fontFamily;
+
+	public FontFamily NotesFontFamily => _fontFamily;
+
 	/// <summary>
 	/// Raised when a user toggles an input pin locally via pointer/touch interaction.
 	/// </summary>
@@ -196,6 +200,10 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	/// </remarks>
 	public HousingView()
 	{
+		_fontFamily = Design.IsDesignMode
+			? new FontFamily( "fonts:AluLabFonts#DejaVu#Sans" )
+			: new FontFamily( "fonts:AluLabFonts#DejaVu" );
+
 		InitializeComponent();
 		InitializePins();
 

@@ -8,6 +8,7 @@ using Avalonia.Data.Core.Plugins;
 using AluLab.Common.Views;
 using AluLab.Common.Services;
 using AluLab.Common.ViewModels;
+using Avalonia.Media;
 
 namespace AluLab.Common;
 
@@ -21,6 +22,8 @@ namespace AluLab.Common;
 /// the entry point for application startup and service configuration in Avalonia-based projects.</remarks>
 public partial class App : Application
 {
+	private static bool _fontsRegistered;
+
 	/// <summary>
 	/// Gets the service provider that supplies access to application services.
 	/// </summary>

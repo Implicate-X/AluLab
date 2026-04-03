@@ -7,8 +7,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+  </PropertyGroup>
 
-    <!-- Raspberry Pi 4B (64-bit OS) -->
+  <!-- Raspberry Pi 4B (64-bit OS) -->
+  <!-- Only set a RID when explicitly publishing or when one is already provided -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == '' and '$(IsPublish)' == 'true'">
     <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
   </PropertyGroup>
 

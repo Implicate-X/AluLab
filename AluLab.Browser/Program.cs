@@ -1,7 +1,10 @@
-﻿using System.Runtime.Versioning;
+﻿using System;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
+using Avalonia.Media;
+using Avalonia.Media.Fonts;
 using AluLab.Common;
 
 /// <summary>
@@ -18,16 +21,21 @@ internal sealed partial class Program
 	/// environment. The method is marked with the SupportedOSPlatform attribute to indicate browser support.</remarks>
 	/// <param name="args">An array of command-line arguments supplied to the application. This parameter is not used in browser environments.</param>
 	/// <returns>A task that represents the asynchronous operation of starting the browser application.</returns>
-	[SupportedOSPlatform("browser")]
-	private static Task Main(string[] args) => BuildAvaloniaApp()
-            .WithInterFont()
-            .StartBrowserAppAsync("out");
+	[SupportedOSPlatform( "browser" )]
+	private static Task Main( string[] args ) => BuildAvaloniaApp()
+		.LogToTrace()
+		.WithInterFont()
+		.AfterSetup( _ =>
+		{
+			FontManager.Current.AddFontCollection( new FontCollection() );
+		} )
+		.StartBrowserAppAsync( "out" );
 
 	/// <summary>
 	/// Configures and returns an Avalonia application builder for the App class.
 	/// </summary>
 	/// <returns>An AppBuilder instance configured for the App class. Use this builder to further configure and start the Avalonia
 	/// application.</returns>
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>();
+	public static AppBuilder BuildAvaloniaApp()
+		=> AppBuilder.Configure<App>();
 }

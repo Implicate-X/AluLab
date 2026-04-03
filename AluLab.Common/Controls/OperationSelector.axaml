@@ -43,7 +43,8 @@
 					 Rows="4"
 					 Margin="0,2,0,0"
 					 HorizontalAlignment="Stretch"
-					 VerticalAlignment="Stretch" />
+					 VerticalAlignment="Stretch" 
+					 />
 	</Border>
 </UserControl>
 

@@ -1,13 +1,16 @@
 ﻿<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AluLab.Common.App"
-             RequestedThemeVariant="Default">
-  <Application.Styles>
-    <FluentTheme />
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="AluLab.Common.App"
+			 RequestedThemeVariant="Default">
+	<Application.Styles>
+		<FluentTheme />
 
-    <Style Selector="UniformGrid">
-      <Setter Property="TextBlock.HorizontalAlignment" Value="Center"/>
-      <Setter Property="TextBlock.VerticalAlignment" Value="Center"/>
-    </Style>
-  </Application.Styles>
+		<Style Selector="UniformGrid">
+			<Setter Property="TextBlock.HorizontalAlignment" Value="Center"/>
+			<Setter Property="TextBlock.VerticalAlignment" Value="Center"/>
+		</Style>
+	</Application.Styles>
+	<Application.Resources>
+		<FontFamily x:Key="DejaVuSansFont">avares://AluLab.Common/Assets/DejaVuSans.ttf</FontFamily>
+	</Application.Resources>
 </Application>
