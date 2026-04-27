@@ -25,9 +25,9 @@ internal sealed partial class Program
 	private static Task Main( string[] args ) => BuildAvaloniaApp()
 		.LogToTrace()
 		.WithInterFont()
-		.AfterSetup( _ =>
+		.ConfigureFonts( fontManager =>
 		{
-			FontManager.Current.AddFontCollection( new FontCollection() );
+			fontManager.AddFontCollection( new FontCollection() );
 		} )
 		.StartBrowserAppAsync( "out" );
 

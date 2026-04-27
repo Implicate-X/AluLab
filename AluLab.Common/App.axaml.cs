@@ -77,7 +77,7 @@ public partial class App : Application
 	/// data validator from the binding plugins.</remarks>
 	public override void OnFrameworkInitializationCompleted()
 	{
-		BindingPlugins.DataValidators.RemoveAt( 0 );
+		//BindingPlugins.DataValidators.RemoveAt( 0 );
 
 		ConfigureServices();
 

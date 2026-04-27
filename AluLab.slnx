@@ -11,7 +11,6 @@
   <Project Path="AluLab.Board/AluLab.Board.csproj" Id="f6fc1db5-ee13-4e3b-9720-4dc480f9f202" />
   <Project Path="AluLab.Browser/AluLab.Browser.csproj" />
   <Project Path="AluLab.Common/AluLab.Common.csproj" />
-  <Project Path="AluLab.Documentation/AluLab.Documentation.shfbproj" Type="7cf6df6d-3b04-46f8-a40b-537d21bca0b4" Id="8a046986-f1a2-4484-96e6-8fd8f291a90b" />
   <Project Path="AluLab.Gateway/AluLab.Gateway.csproj" />
   <Project Path="AluLab.Server/AluLab.Server.csproj" />
   <Project Path="AluLab.Workbench/AluLab.Workbench.csproj" />
