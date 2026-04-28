@@ -1,4 +1,9 @@
-﻿param(
+﻿#dotnet publish .\AluLab.Browser\AluLab.Browser.csproj -c Release -p:PublishProfile=LocalFolder
+#pwsh.exe -NoProfile -ExecutionPolicy Bypass -Command "cd 'S:\Code\HomeLabs\AluLab'; dotnet publish '.\AluLab.Browser\AluLab.Browser.csproj' -c Release -p:PublishProfile=LocalFolder"
+#pwsh.exe -NoProfile -ExecutionPolicy Bypass -Command "cd 'S:\Code\HomeLabs\AluLab'; dotnet publish '.\AluLab.Browser\AluLab.Browser.csproj' -c Release -p:PublishProfile=LocalFolder; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; .\AluLab.Browser.Deploy.ps1"
+#-NoProfile -ExecutionPolicy Bypass -Command "cd '$(SolutionDir)'; dotnet publish '.\AluLab.Browser\AluLab.Browser.csproj' -c Release -p:PublishProfile=LocalFolder; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+
+param(
     [string]$localPath = "AluLab.Browser\bin\Release\net10.0-browser\publish\wwwroot",
     [string]$ftpRoot = "ftp://implicatex:yNQ5Or%de@myhobby.page/alu.homelabs.one",
     [string]$user = "implicatex",
