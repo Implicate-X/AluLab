@@ -1,5 +1,5 @@
 
-namespace AluLab.Board.Touch
+namespace AluLab.IoT.Board.Touch
 {
 	public sealed class InputService
 	{

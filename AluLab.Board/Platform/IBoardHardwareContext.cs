@@ -2,7 +2,7 @@ using System.Device.Gpio;
 using System.Device.I2c;
 using System.Device.Spi;
 
-namespace AluLab.Board.Platform;
+namespace AluLab.IoT.Board.Platform;
 
 /// <summary>
 /// Provides access to the board's hardware resources (I2C/SPI/GPIO) provided by host projects (e.g., Workbench/Gateway).
@@ -11,7 +11,7 @@ namespace AluLab.Board.Platform;
 /// <para>
 /// This interface does not create or manage any hardware resources and, in particular, does not
 /// <see cref="System.IDisposable.Dispose"/> any of these resources. The lifetime (creation,
-/// configuration, release) remains entirely with the host; <c>AluLab.Board</c> only consumes the dependencies via DI.
+/// configuration, release) remains entirely with the host; <c>AluLab.IoT.Board</c> only consumes the dependencies via DI.
 /// </para>
 /// <para>
 /// Pin assignments are host-specific and must be provided by the host implementation (Workbench: FTDI pin indices,

@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace AluLab.Board.Display
+namespace AluLab.IoT.Board.Display
 {
 	/// <summary>
 	/// This is the image format used by the Ili934X internally. It's similar to the (meanwhile otherwise rather obsolete) 16-bit RGB format with

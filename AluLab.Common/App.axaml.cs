@@ -65,6 +65,7 @@ public partial class App : Application
 	/// need to be called directly in most scenarios.</remarks>
 	public override void Initialize()
 	{
+	Console.WriteLine( "Initializing application..." );
 		AvaloniaXamlLoader.Load( this );
 	}
 
@@ -83,12 +84,14 @@ public partial class App : Application
 
 		if( ApplicationLifetime is ISingleViewApplicationLifetime single )
 		{
+			Console.WriteLine( "Setting main view for single view application lifetime." );
 			single.MainView = new HousingView();
 			return;
 		}
 
 		if( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
 		{
+			Console.WriteLine( "Setting main window for classic desktop application lifetime." );
 			var window = new HousingWindow();
 			desktop.MainWindow = window;
 
@@ -107,6 +110,7 @@ public partial class App : Application
 	/// callback.</remarks>
 	private void ConfigureServices()
 	{
+	Console.WriteLine( "Configuring services..." );
 		var services = new ServiceCollection();
 
 		services.AddSingleton<SyncService>();

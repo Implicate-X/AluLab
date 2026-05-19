@@ -2,7 +2,7 @@ using System;
 using System.Device.Gpio;
 using System.Device.I2c;
 using System.Device.Spi;
-using AluLab.Board.Platform;
+using AluLab.IoT.Board.Platform;
 
 namespace AluLab.Workbench.Hardware;
 

@@ -8,14 +8,14 @@ using Avalonia;
 using Serilog;
 using Serilog.Events;
 using AluLab.Common;
-using AluLab.Board.Services;
-using AluLab.Board.Platform;
-using AluLab.Gateway.Hardware;
+using AluLab.IoT.Board.Services;
+using AluLab.IoT.Board.Platform;
+using AluLab.IoT.Raspberry.Hardware;
 
-namespace AluLab.Gateway;
+namespace AluLab.IoT.Raspberry;
 
 /// <summary>
-/// Application entry point for the Gateway desktop app.
+/// Application entry point for the Raspberry Pi app.
 /// </summary>
 /// <remarks>
 /// Responsibilities:

@@ -2,7 +2,7 @@
 using System.Device.I2c;
 using Iot.Device.Mcp23xxx;
 
-namespace AluLab.Board.InputOutputExpander
+namespace AluLab.IoT.Board.InputOutputExpander
 {
 	/// <summary>
 	/// Global I2C lock for all MCP23017 instances in the process.

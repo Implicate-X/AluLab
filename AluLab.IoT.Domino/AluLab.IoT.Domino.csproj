@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.LinuxFramebuffer" />
+    <PackageReference Include="Avalonia.Diagnostics" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GHIElectronics.Endpoint.Core" />
+    <PackageReference Include="GHIElectronics.Endpoint.Devices.Camera" />
+    <PackageReference Include="GHIElectronics.Endpoint.Devices.Display" />
+    <PackageReference Include="GHIElectronics.Endpoint.Devices.Network" />
+    <PackageReference Include="GHIElectronics.Endpoint.Devices.Usb" />
+    <PackageReference Include="GHIElectronics.Endpoint.Devices.UsbHost" />
+    <PackageReference Include="GHIElectronics.Endpoint.Drivers.Avalonia.Input" />
+    <PackageReference Include="GHIElectronics.Endpoint.Drivers.FocalTech.FT5xx6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AluLab.Board\AluLab.IoT.Board.csproj" />
+    <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
+  </ItemGroup>
+
+</Project>

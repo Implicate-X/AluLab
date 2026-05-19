@@ -1,7 +1,7 @@
 using System.Device.Spi;
-using AluLab.Board.Display;
+using AluLab.IoT.Board.Display;
 
-namespace AluLab.Board.Touch;
+namespace AluLab.IoT.Board.Touch;
 
 /// <summary>
 /// Provides access to an XPT2046 touch controller via SPI, enabling touch detection and position retrieval mapped to

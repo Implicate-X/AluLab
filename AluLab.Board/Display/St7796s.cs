@@ -3,7 +3,7 @@ using System.Device.Spi;
 using System.Drawing;
 using Iot.Device.Graphics;
 
-namespace AluLab.Board.Display
+namespace AluLab.IoT.Board.Display
 {
 	/// <summary>
 	/// Represents a driver for the ST7796S-based SPI graphic display, providing methods to initialize, control, and render

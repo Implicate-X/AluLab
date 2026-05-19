@@ -8,12 +8,16 @@ using Serilog.Events;
 using AluLab.Common;
 using AluLab.Common.Services;
 using AluLab.Common.Relay;
-using AluLab.Board.Services;
-using AluLab.Board.Platform;
+using AluLab.IoT.Board.Services;
+using AluLab.IoT.Board.Platform;
 using AluLab.Workbench.Hardware;
 using AluLab.Workbench.Services;
+using Windows.Media.Capture;
+using Windows.Media.Capture.Frames;
+using Windows.Storage;
+using System.Threading.Tasks;
 
-namespace AluLab.Workbench;
+namespace AluLab.IoT.Desktop;
 
 /// <summary>
 /// Entry point for the Workbench application.
@@ -107,8 +111,15 @@ sealed class Program
 	/// single-threaded COM apartment (common on Windows).
 	/// </remarks>
 	[STAThread]
-	public static void Main( string[] args )
+	public static async Task Main( string[] args )
 	{
+		//CameraCaptureUI dialog = new CameraCaptureUI();
+		//if( dialog == null )
+		//{
+		//	Console.WriteLine( "CameraCaptureUI is not supported on this platform." );
+		//	return;
+		//}
+		//StorageFile file = await dialog.CaptureFileAsync(CameraCaptureUIMode.Photo);
 		ConfigureLogging();
 
 		try

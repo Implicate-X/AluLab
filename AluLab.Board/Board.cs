@@ -2,13 +2,13 @@
 using System.Device.I2c;
 using System.Device.Spi;
 using Iot.Device.Mcp23xxx;
-using AluLab.Board.InputOutputExpander;
-using AluLab.Board.Alu;
-using AluLab.Board.Display;
-using AluLab.Board.Touch;
-using AluLab.Board.Platform;
+using AluLab.IoT.Board.InputOutputExpander;
+using AluLab.IoT.Board.Alu;
+using AluLab.IoT.Board.Display;
+using AluLab.IoT.Board.Touch;
+using AluLab.IoT.Board.Platform;
 
-namespace AluLab.Board
+namespace AluLab.IoT.Board
 {
 	/// <summary>
 	/// Central interface for accessing the hardware components of an AluLab board.
@@ -416,8 +416,8 @@ namespace AluLab.Board
 		{
 			try
 			{
-				using var v1Reset = i2cLinesController.OpenPin( v1ResetPin, PinMode.Output );
-				using var v2Reset = i2cLinesController.OpenPin( v2ResetPin, PinMode.Output );
+				GpioPin v1Reset = i2cLinesController.OpenPin( v1ResetPin, PinMode.Output );
+				GpioPin v2Reset = i2cLinesController.OpenPin( v2ResetPin, PinMode.Output );
 
 				v1Reset.Write( PinValue.High );
 				v2Reset.Write( PinValue.High );

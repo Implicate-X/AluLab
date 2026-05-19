@@ -4,41 +4,59 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Windows.SDK.Contracts" Version="10.0.28000.1839" />
+    <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.2.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Components" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.2" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.0.0" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="Iot.Device.Bindings" Version="4.2.0" />
-    <PackageVersion Include="Iot.Device.Bindings.SkiaSharpAdapter" Version="4.2.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
-    <!-- Avalonia packages -->
-    <!-- Important: keep version in sync! -->
-    <PackageVersion Include="Avalonia" Version="12.0.1" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.1" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.1" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.14" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="GHIElectronics.Endpoint.Core" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Devices.Camera" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Devices.Display" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Devices.Network" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Devices.Usb" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Devices.UsbHost" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Drivers.Avalonia.Input" Version="0.1.7-beta" />
+    <PackageVersion Include="GHIElectronics.Endpoint.Drivers.FocalTech.FT5xx6" Version="0.1.7-beta" />  
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="Avalonia" Version="12.0.3" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.3" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.3" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.0.3" />
     <PackageVersion Include="Avalonia.iOS" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Browser" Version="12.0.1" />
+    <PackageVersion Include="Avalonia.Browser" Version="12.0.3" />
     <PackageVersion Include="Avalonia.Browser.Blazor" Version="11.3.12" />
-    <PackageVersion Include="Avalonia.Android" Version="12.0.1" />
+    <PackageVersion Include="Avalonia.Android" Version="12.0.3" />
+    <PackageVersion Include="Avalonia.LinuxFramebuffer" Version="12.0.3" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.15" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="System.Drawing.Common" Version="8.0.8" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.2.0.2" />
-    <!-- Swagger / OpenAPI -->
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
   <ItemGroup>
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="Iot.Device.Bindings" Version="3.1.0" />
+    <PackageVersion Include="Iot.Device.Bindings.SkiaSharpAdapter" Version="3.1.0" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4-preview.1.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.4-preview.1.1" />
-  </ItemGroup>  
+  </ItemGroup>
 </Project>

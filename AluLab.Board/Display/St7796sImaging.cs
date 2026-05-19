@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Iot.Device.Graphics;
 
-namespace AluLab.Board.Display
+namespace AluLab.IoT.Board.Display
 {
 	public partial class St7796s
 	{

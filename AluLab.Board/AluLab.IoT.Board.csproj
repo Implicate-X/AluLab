@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
-    <ProjectReference Include="..\..\..\ImplicateX\CodeGenerators\XmlDocGenerator\XmlDocGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

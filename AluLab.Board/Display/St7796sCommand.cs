@@ -1,4 +1,4 @@
-namespace AluLab.Board.Display
+namespace AluLab.IoT.Board.Display
 {
     /// <summary>
     /// Represents all supported commands for the ST7796S display controller.

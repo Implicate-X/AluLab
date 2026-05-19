@@ -1,7 +1,7 @@
 using System;
 using Iot.Device.Mcp23xxx;
 
-namespace AluLab.Board.InputOutputExpander;
+namespace AluLab.IoT.Board.InputOutputExpander;
 
 /// <summary>
 /// Provides utility methods for configuring and accessing individual pins on an MCP23017 I/O expander device.

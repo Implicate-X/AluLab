@@ -1,4 +1,4 @@
-namespace AluLab.Board.Platform;
+namespace AluLab.IoT.Board.Platform;
 
 /// <summary>
 /// Provides an abstraction for obtaining a <see cref="Board"/> instance from the current environment

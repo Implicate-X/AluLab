@@ -3,7 +3,7 @@ using System.Device.Spi;
 using System.Drawing;
 using Iot.Device.Graphics;
 
-namespace AluLab.Board.Display
+namespace AluLab.IoT.Board.Display
 {
 	/// <summary>
 	/// The ILI9341 is a QVGA (Quarter VGA) driver integrated circuit that is used to control 240×320 VGA LCD screens.
