@@ -5,7 +5,7 @@ using System.Threading;
 using Iot.Device.Gpio;
 using Iot.Device.Mcp23xxx;
 
-namespace AluLab.IoT.Board.InputOutputExpander
+namespace AluLab.Board.InputOutputExpander
 {
 	/// <summary>
 	/// Provides an interface to a 16-channel I/O expander (MCP23017) configured for controlling and monitoring the operand

@@ -2,13 +2,13 @@
 using System.Device.I2c;
 using System.Device.Spi;
 using Iot.Device.Mcp23xxx;
-using AluLab.IoT.Board.InputOutputExpander;
-using AluLab.IoT.Board.Alu;
-using AluLab.IoT.Board.Display;
-using AluLab.IoT.Board.Touch;
-using AluLab.IoT.Board.Platform;
+using AluLab.Board.InputOutputExpander;
+using AluLab.Board.Alu;
+using AluLab.Board.Display;
+using AluLab.Board.Touch;
+using AluLab.Board.Platform;
 
-namespace AluLab.IoT.Board
+namespace AluLab.Board
 {
 	/// <summary>
 	/// Central interface for accessing the hardware components of an AluLab board.

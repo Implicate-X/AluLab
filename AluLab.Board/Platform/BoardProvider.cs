@@ -1,4 +1,4 @@
-namespace AluLab.IoT.Board.Platform;
+namespace AluLab.Board.Platform;
 
 /// <summary>
 /// Provides exactly one <see cref="Board"/> instance per process (lazy) and encapsulates the

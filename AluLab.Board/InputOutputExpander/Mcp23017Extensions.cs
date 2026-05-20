@@ -1,7 +1,7 @@
 using System;
 using Iot.Device.Mcp23xxx;
 
-namespace AluLab.IoT.Board.InputOutputExpander
+namespace AluLab.Board.InputOutputExpander
 {
 	public static class Mcp23017Extensions
 	{

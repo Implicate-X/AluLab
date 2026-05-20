@@ -12,11 +12,11 @@ using GHIElectronics.Endpoint.Devices.Display;
 using GHIElectronics.Endpoint.Drivers.Avalonia.Input;
 using GHIElectronics.Endpoint.Drivers.FocalTech.FT5xx6;
 
-using AluLab.IoT.Board.Services;
-using AluLab.IoT.Board.Platform;
-using AluLab.IoT.Domino.Hardware;
+using AluLab.Board.Services;
+using AluLab.Board.Platform;
+using AluLab.Gateway.Domino.Hardware;
 
-namespace AluLab.IoT.Domino;
+namespace AluLab.Gateway.Domino;
 
 internal static class Program
 {

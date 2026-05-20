@@ -2,7 +2,7 @@
 using Iot.Device.Ft4232H;
 using Iot.Device.FtCommon;
 
-namespace AluLab.IoT.Board.Communication
+namespace AluLab.Board.Communication
 {
 	/// <summary>
 	/// Provides access to FT4232H devices configured for I2C, GPIO, and SPI communication channels used in laboratory

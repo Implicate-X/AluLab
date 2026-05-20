@@ -8,11 +8,11 @@ using Avalonia;
 using Serilog;
 using Serilog.Events;
 using AluLab.Common;
-using AluLab.IoT.Board.Services;
-using AluLab.IoT.Board.Platform;
-using AluLab.IoT.Raspberry.Hardware;
+using AluLab.Board.Services;
+using AluLab.Board.Platform;
+using AluLab.Gateway.Raspberry.Hardware;
 
-namespace AluLab.IoT.Raspberry;
+namespace AluLab.Gateway.Raspberry;
 
 /// <summary>
 /// Application entry point for the Raspberry Pi app.

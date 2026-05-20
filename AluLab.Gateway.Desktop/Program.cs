@@ -8,8 +8,8 @@ using Serilog.Events;
 using AluLab.Common;
 using AluLab.Common.Services;
 using AluLab.Common.Relay;
-using AluLab.IoT.Board.Services;
-using AluLab.IoT.Board.Platform;
+using AluLab.Board.Services;
+using AluLab.Board.Platform;
 using AluLab.Workbench.Hardware;
 using AluLab.Workbench.Services;
 using Windows.Media.Capture;
@@ -17,7 +17,7 @@ using Windows.Media.Capture.Frames;
 using Windows.Storage;
 using System.Threading.Tasks;
 
-namespace AluLab.IoT.Desktop;
+namespace AluLab.Gateway.Desktop;
 
 /// <summary>
 /// Entry point for the Workbench application.

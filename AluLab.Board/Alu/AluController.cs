@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Iot.Device.Mcp23xxx;
-using AluLab.IoT.Board.InputOutputExpander;
+using AluLab.Board.InputOutputExpander;
 using AluLab.Common.Relay;
 using System.Diagnostics;
 
-namespace AluLab.IoT.Board.Alu
+namespace AluLab.Board.Alu
 {
 	/// <summary>
 	/// Controller for the ALU hardware connection, including optional synchronization via a SyncHub.

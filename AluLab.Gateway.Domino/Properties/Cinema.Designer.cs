@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AluLab.IoT.Domino.Properties {
+namespace AluLab.Gateway.Domino.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace AluLab.IoT.Domino.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AluLab.IoT.Domino.Properties.Cinema", typeof(Cinema).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AluLab.Gateway.Domino.Properties.Cinema", typeof(Cinema).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

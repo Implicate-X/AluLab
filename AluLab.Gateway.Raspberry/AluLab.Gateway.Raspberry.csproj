@@ -31,7 +31,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\AluLab.Board\AluLab.IoT.Board.csproj" />
+    <ProjectReference Include="..\AluLab.Board\AluLab.Board.csproj" />
     <ProjectReference Include="..\AluLab.Common\AluLab.Common.csproj" />
   </ItemGroup>
 

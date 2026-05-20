@@ -2,18 +2,18 @@ using System;
 using System.Device.Gpio;
 using System.Device.I2c;
 using System.Device.Spi;
-using AluLab.IoT.Board.Platform;
+using AluLab.Board.Platform;
 
-namespace AluLab.IoT.Raspberry.Hardware;
+namespace AluLab.Gateway.Domino.Hardware;
 
 /// <summary>
-/// Endpoint Domino specific hardware context for the Gateway application.
+/// Raspberry Pi specific hardware context for the Gateway application.
 /// </summary>
 /// <remarks>
 /// This type centralizes the creation and configuration of bus devices (I2C/SPI) and GPIO controllers
 /// as required by <see cref="IBoardHardwareContext"/>.
 /// <para>
-/// Bus and pin mappings in this implementation are for Endpoint Domino using BCM pin numbering.
+/// Bus and pin mappings in this implementation are for Raspberry Pi using BCM pin numbering.
 /// </para>
 /// <para>
 /// SPI usage:
@@ -30,9 +30,9 @@ namespace AluLab.IoT.Raspberry.Hardware;
 /// </remarks>
 public sealed class HardwareContext : IBoardHardwareContext
 {
-	// Endpoint Domino: I2C1, SPI0 (CE0), SPI1 (CE2)
+	// Raspberry Pi: I2C1, SPI0 (CE0), SPI1 (CE2)
 	/// <summary>
-	/// Endpoint Domino I2C bus ID used by the Gateway hardware (I2C1).
+	/// Raspberry Pi I2C bus ID used by the Gateway hardware (I2C1).
 	/// </summary>
 	private const int I2cBusId = 1;
 

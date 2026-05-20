@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Iot.Device.Graphics;
 
-namespace AluLab.IoT.Board.Display
+namespace AluLab.Board.Display
 {
 	public partial class Ili9341
 	{

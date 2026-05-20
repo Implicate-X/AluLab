@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using Avalonia;
 using Serilog;
 using AluLab.Common;
-using AluLab.IoT.Board.Services;
+using AluLab.Board.Services;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using AluLab.Common.Services;
 using AluLab.Common.Relay;
 
-namespace AluLab.IoT.Board.Platform;
+namespace AluLab.Board.Platform;
 
 /// <summary>
 /// Creates and configures an Avalonia <see cref="AppBuilder"/> for the desktop “Board” application.

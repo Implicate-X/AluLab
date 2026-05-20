@@ -7,14 +7,14 @@
   <Project Path="AluLab.Android/AluLab.Android.csproj">
     <Deploy />
   </Project>
-  <Project Path="AluLab.Board/AluLab.IoT.Board.csproj" Id="f6fc1db5-ee13-4e3b-9720-4dc480f9f202" />
   <Project Path="AluLab.Browser/AluLab.Browser.csproj" />
   <Project Path="AluLab.Common/AluLab.Common.csproj" />
-  <Project Path="AluLab.IoT.Controller/AluLab.IoT.Controller.csproj" Id="283b2a70-3f6b-4a48-8769-bfa5a7df4008">
+  <Project Path="AluLab.Board/AluLab.Board.csproj" Id="f6fc1db5-ee13-4e3b-9720-4dc480f9f202" />
+  <Project Path="AluLab.Gateway.Controller/AluLab.Gateway.Controller.csproj" Id="283b2a70-3f6b-4a48-8769-bfa5a7df4008">
     <Deploy />
   </Project>
-  <Project Path="AluLab.IoT.Desktop/AluLab.IoT.Desktop.csproj" />
-  <Project Path="AluLab.IoT.Domino/AluLab.IoT.Domino.csproj" />
-  <Project Path="AluLab.IoT.Raspberry/AluLab.IoT.Raspberry.csproj" />
+  <Project Path="AluLab.Gateway.Desktop/AluLab.Gateway.Desktop.csproj" />
+  <Project Path="AluLab.Gateway.Domino/AluLab.Gateway.Domino.csproj" />
+  <Project Path="AluLab.Gateway.Raspberry/AluLab.Gateway.Raspberry.csproj" />
   <Project Path="AluLab.Server/AluLab.Server.csproj" />
 </Solution>

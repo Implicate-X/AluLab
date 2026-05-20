@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle( "AluLab.IoT.Controller" )]
+[assembly: AssemblyTitle( "AluLab.Gateway.Controller" )]
 [assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "" )]
-[assembly: AssemblyProduct( "AluLab.IoT.Controller" )]
+[assembly: AssemblyProduct( "AluLab.Gateway.Controller" )]
 [assembly: AssemblyCopyright( "Copyright ©  2026" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]

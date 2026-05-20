@@ -2,7 +2,7 @@ using System.Device.Gpio;
 using System.Device.I2c;
 using System.Device.Spi;
 
-namespace AluLab.IoT.Board.Platform;
+namespace AluLab.Board.Platform;
 
 /// <summary>
 /// Abstraction of platform-specific hardware creation for the board.
