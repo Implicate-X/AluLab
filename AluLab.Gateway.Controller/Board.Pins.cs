@@ -39,37 +39,28 @@ namespace AluLab.Gateway.Controller
 			public const int C = SC13048.GpioPin.PB5;
 		}
 
-		/// <summary>
-		/// GPIO pins that enable the I2C bus buffer (PCA9518) for each gateway target.
-		/// </summary>
-		private class I2cEnablePin
-		{
-			/// <summary>Gateway Desktop PC<br/>PCA9518 EN1.</summary>
-			public const int A = SC13048.GpioPin.PA3;
-
-			/// <summary>Gateway GHI Endpoint Domino<br/>PCA9518 EN2.</summary>
-			public const int B = SC13048.GpioPin.PA4;
-
-			/// <summary>Gateway Raspberry Pi 4B<br/>PCA9518 EN3.</summary>
-			public const int C = SC13048.GpioPin.PA5;
-		}
 
 		/// <summary>
 		/// GPIO pins that enable the peripheral bus for each gateway target.
 		/// </summary>
 		/// <remarks>
-		/// Used for shared peripherals such as SPI Display and SPI Touch (GPIO V1+V2).
+		/// Used for shared peripherals such as I2C, SPI Display and SPI Touch (GPIO V1+V2).
 		/// </remarks>
 		private class BusEnablePin
 		{
-			/// <summary>Gateway Desktop PC<br/>SPI Display, SPI Touch GPIO V1+V2.</summary>
+			/// <summary>Gateway Desktop PC<br/>I2C, SPI Display, SPI Touch GPIO V1+V2.</summary>
 			public const int A = SC13048.GpioPin.PB13;
 
-			/// <summary>Gateway GHI Endpoint Domino<br/>SPI Display, SPI Touch GPIO V1+V2.</summary>
+			/// <summary>Gateway GHI Endpoint Domino<br/>I2C, SPI Display, SPI Touch GPIO V1+V2.</summary>
 			public const int B = SC13048.GpioPin.PB14;
 
-			/// <summary>Gateway Raspberry Pi 4B<br/>SPI Display, SPI Touch GPIO V1+V2.</summary>
+			/// <summary>Gateway Raspberry Pi 4B<br/>I2C, SPI Display, SPI Touch GPIO V1+V2.</summary>
 			public const int C = SC13048.GpioPin.PB15;
+		}
+
+		private class OctalSwitchesControlPin
+		{
+			public const int Shutdown = SC13048.GpioPin.PA14;
 		}
 	}
 }

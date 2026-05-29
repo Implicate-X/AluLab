@@ -35,7 +35,6 @@ namespace AluLab.Gateway.Controller
 
 			// Keep the process alive indefinitely (this host does not currently implement a shutdown mechanism).
 			Thread.Sleep( Timeout.Infinite );
-
 		}
 	}
 }

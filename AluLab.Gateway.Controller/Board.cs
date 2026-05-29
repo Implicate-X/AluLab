@@ -6,309 +6,381 @@ using GHIElectronics.TinyCLR.Devices.Gpio;
 using GHIElectronics.TinyCLR.Devices.I2c;
 using GHIElectronics.TinyCLR.Drivers.BasicGraphics;
 using System.Threading;
+using System.Diagnostics;
+
+#nullable enable
 
 namespace AluLab.Gateway.Controller
 {
-	/// <summary>
-	/// Board-level hardware abstraction for the gateway controller.
-	/// </summary>
-	/// <remarks>
-	/// Responsibilities:
-	/// <list type="bullet">
-	/// <item><description>Initialize GPIO and I2C peripherals (TinyCLR).</description></item>
-	/// <item><description>Drive an SSD1306 OLED to display the currently selected gateway.</description></item>
-	/// <item><description>Read user input via a rotary encoder and three dedicated selection inputs.</description></item>
-	/// <item><description>Select one of three "gateway" paths by enabling/disabling the corresponding I2C/bus lines.</description></item>
-	/// </list>
-	/// Pin identifiers such as <c>I2cEnablePin.A</c>, <c>BusEnablePin.B</c>, <c>SelectWayPin.C</c>, and <c>EncoderPin.A</c>
-	/// are expected to be defined in another part of this <c>partial</c> class (or related types).
-	/// </remarks>
-	internal partial class Board : IDisposable
-	{
-		/// <summary>Default GPIO controller instance.</summary>
-		private GpioController gpioController_;
+    /// <summary>
+    /// Board-level hardware abstraction for the gateway controller.
+    /// </summary>
+    /// <remarks>
+    /// Responsibilities:
+    /// <list type="bullet">
+    /// <item><description>Initialize GPIO and I2C peripherals (TinyCLR).</description></item>
+    /// <item><description>Drive an SSD1306 OLED to display the currently selected gateway.</description></item>
+    /// <item><description>Read user input via a rotary encoder and three dedicated selection inputs.</description></item>
+    /// <item><description>Select one of three "gateway" paths by enabling/disabling the corresponding I2C/bus lines.</description></item>
+    /// </list>
+    /// Pin identifiers such as <c>I2cEnablePin.A</c>, <c>BusEnablePin.B</c>, <c>SelectWayPin.C</c>, and <c>EncoderPin.A</c>
+    /// are expected to be defined in another part of this <c>partial</c> class (or related types).
+    /// </remarks>
+    internal partial class Board : IDisposable
+    {
+        /// <summary>Default GPIO controller instance.</summary>
+        private GpioController? gpioController_ = null;
 
-		/// <summary>I2C controller instance used to communicate with the OLED display.</summary>
-		private I2cController i2cController_;
+        /// <summary>I2C controller instance used to communicate with the OLED display.</summary>
+        private I2cController? i2cController_ = null;
 
-		/// <summary>SSD1306 display driver instance.</summary>
-		private SD1306 displayController_;
+        /// <summary>SSD1306 display driver instance.</summary>
+        private SD1306? displayController_;
 
-		/// <summary>GPIO pins used to enable I2C routing for gateway paths A/B/C.</summary>
-		private GpioPin i2cEnablePinA_;
-		private GpioPin i2cEnablePinB_;
-		private GpioPin i2cEnablePinC_;
+        private GpioPin? octalSwitchesShutdownPin_;
 
-		/// <summary>GPIO pins used to enable/disable the main bus for gateway paths A/B/C.</summary>
-		private GpioPin busEnablePinA_;
-		private GpioPin busEnablePinB_;
-		private GpioPin busEnablePinC_;
+        private GpioPin[] busEnablePins = new GpioPin[ 3 ];
 
-		/// <summary>GPIO inputs used as direct "select gateway" buttons (A/B/C).</summary>
-		private GpioPin selectWayPinA_;
-		private GpioPin selectWayPinB_;
-		private GpioPin selectWayPinC_;
+		private GpioPin[] selectWayPins = new GpioPin[ 3 ];
 
-		/// <summary>Rotary encoder input pins (quadrature A/B).</summary>
-		private GpioPin encoderPinA_;
-		private GpioPin encoderPinB_;
+        /// <summary>Rotary encoder input pins (quadrature A/B).</summary>
+        private GpioPin? encoderPinA_;
+        private GpioPin? encoderPinB_;
 
-		/// <summary>Rotary encoder helper for decoding A/B transitions into steps.</summary>
-		private RotaryEncoder encoder_;
+        /// <summary>Rotary encoder helper for decoding A/B transitions into steps.</summary>
+        private RotaryEncoder? encoder_;
 
-		/// <summary>
-		/// Index of the currently selected gateway (0..2).
-		/// </summary>
-		private byte gatewayIndex_ = 1;
+        private OctalSwitchV4? octalSwitchV4_;
+        private OctalSwitchV5? octalSwitchV5_;
+        private OctalSwitchV6? octalSwitchV6_;
+        private OctalSwitchV7? octalSwitchV7_;
 
-		/// <summary>Convenience constant for drawing in 1bpp graphics buffer.</summary>
-		private const uint COLOR_WHITE = 0x00ffffffU;
+        /// <summary>
+        /// Index of the currently selected gateway (0..2).
+        /// </summary>
+        private byte gatewayIndex_ = 2;
 
-		/// <summary>Human-readable names shown on the OLED for each gateway index.</summary>
-		private readonly string[] GATEWAY_NAME = { "Desktop", "GHI Domino", "Raspberry" };
+        /// <summary>Convenience constant for drawing in 1bpp graphics buffer.</summary>
+        private const uint COLOR_WHITE = 0x00ffffffU;
 
-		/// <summary>
-		/// Backing graphics buffer for the OLED display.
-		/// </summary>
-		/// <remarks>
-		/// The buffer is rendered to the OLED via <see cref="SD1306.DrawBufferNative(byte[])"/>.
-		/// </remarks>
-		private BasicGraphics graphics_;
+        /// <summary>Human-readable names shown on the OLED for each gateway index.</summary>
+        private readonly string[] GATEWAY_NAME = { "Desktop", "Raspberry", "GHI Domino" };
 
-		/// <summary>
-		/// Synchronizes concurrent draw/select operations triggered by encoder events.
-		/// </summary>
-		private readonly object drawLock_ = new();
+        /// <summary>
+        /// Backing graphics buffer for the OLED display.
+        /// </summary>
+        /// <remarks>
+        /// The buffer is rendered to the OLED via <see cref="SD1306.DrawBufferNative(byte[])"/>.
+        /// </remarks>
+        private BasicGraphics? graphics_;
 
-		/// <summary>
-		/// Initializes GPIO, rotary encoder input, I2C bus, OLED controller, and renders the initial UI.
-		/// </summary>
-		/// <remarks>
-		/// Initialization flow:
-		/// <list type="number">
-		/// <item><description>Open all required GPIO pins and set drive modes.</description></item>
-		/// <item><description>Configure selection inputs (pull-up + falling edge interrupt).</description></item>
-		/// <item><description>Configure and start the rotary encoder step decoder.</description></item>
-		/// <item><description>Open I2C and create the SSD1306 display driver.</description></item>
-		/// <item><description>Render initial selection state and apply routing to the selected gateway.</description></item>
-		/// </list>
-		/// </remarks>
-		public void Initialize()
-		{
-			gpioController_ = GpioController.GetDefault();
+        /// <summary>
+        /// Synchronizes concurrent draw/select operations triggered by encoder events.
+        /// </summary>
+        private readonly object drawLock_ = new();
 
-			i2cEnablePinA_ = gpioController_.OpenPin( I2cEnablePin.A );
-			i2cEnablePinB_ = gpioController_.OpenPin( I2cEnablePin.B );
-			i2cEnablePinC_ = gpioController_.OpenPin( I2cEnablePin.C );
-
-			busEnablePinA_ = gpioController_.OpenPin( BusEnablePin.A );
-			busEnablePinB_ = gpioController_.OpenPin( BusEnablePin.B );
-			busEnablePinC_ = gpioController_.OpenPin( BusEnablePin.C );
-
-			selectWayPinA_ = gpioController_.OpenPin( SelectWayPin.A );
-			selectWayPinB_ = gpioController_.OpenPin( SelectWayPin.B );
-			selectWayPinC_ = gpioController_.OpenPin( SelectWayPin.C );
-
-			i2cEnablePinA_.SetDriveMode( GpioPinDriveMode.Output );
-			i2cEnablePinB_.SetDriveMode( GpioPinDriveMode.Output );
-			i2cEnablePinC_.SetDriveMode( GpioPinDriveMode.Output );
-
-			busEnablePinA_.SetDriveMode( GpioPinDriveMode.Output );
-			busEnablePinB_.SetDriveMode( GpioPinDriveMode.Output );
-			busEnablePinC_.SetDriveMode( GpioPinDriveMode.Output );
-
-			// Start with I2C routing disabled for all paths.
-			i2cEnablePinA_.Write( GpioPinValue.Low );
-			i2cEnablePinB_.Write( GpioPinValue.Low );
-			i2cEnablePinC_.Write( GpioPinValue.Low );
-
-			// Start with bus disabled (active-low) for all paths.
-			busEnablePinA_.Write( GpioPinValue.High );
-			busEnablePinB_.Write( GpioPinValue.High );
-			busEnablePinC_.Write( GpioPinValue.High );
-
-			// Direct selection inputs (buttons/switches) are pull-ups; falling edge indicates activation.
-			selectWayPinA_.SetDriveMode( GpioPinDriveMode.InputPullUp );
-			selectWayPinB_.SetDriveMode( GpioPinDriveMode.InputPullUp );
-			selectWayPinC_.SetDriveMode( GpioPinDriveMode.InputPullUp );
-
-			selectWayPinA_.ValueChangedEdge = GpioPinEdge.FallingEdge;
-			selectWayPinB_.ValueChangedEdge = GpioPinEdge.FallingEdge;
-			selectWayPinC_.ValueChangedEdge = GpioPinEdge.FallingEdge;
-
-			selectWayPinA_.ValueChanged += SelectWayPinA__ValueChanged;
-			selectWayPinB_.ValueChanged += SelectWayPinB__ValueChanged;
-			selectWayPinC_.ValueChanged += SelectWayPinC__ValueChanged;
-
-			encoderPinA_ = gpioController_.OpenPin( EncoderPin.A );
-			encoderPinB_ = gpioController_.OpenPin( EncoderPin.B );
-
-			encoderPinA_.SetDriveMode( GpioPinDriveMode.InputPullUp );
-			encoderPinB_.SetDriveMode( GpioPinDriveMode.InputPullUp );
-
-			// Encoder is polled by the helper; keep GPIO debounce disabled to preserve responsiveness.
-			encoderPinA_.DebounceTimeout = TimeSpan.Zero;
-			encoderPinB_.DebounceTimeout = TimeSpan.Zero;
-
-			encoder_ = new RotaryEncoder( encoderPinA_, encoderPinB_, transitionsPerStep: 2, pollPeriodMs: 2 );
-			encoder_.Stepped += Encoder__Stepped;
-
-			i2cController_ = I2cController.FromName( SC13048.I2cBus.I2c1 );
-
-			displayController_ =
-				new SD1306( i2cController_.GetDevice( SD1306.GetConnectionSettings() ) );
-
-			graphics_ = new BasicGraphics( 128, 32, ColorFormat.OneBpp );
-
-			DrawInfo();
-			SelectGateway();
-		}
-
-		/// <summary>
-		/// Applies the current <see cref="gatewayIndex_"/> to the hardware routing pins.
-		/// </summary>
-		/// <remarks>
-		/// Behavior:
-		/// <list type="bullet">
-		/// <item><description>First disables all I2C paths and disables all buses.</description></item>
-		/// <item><description>Waits briefly to allow signals to settle.</description></item>
-		/// <item><description>Enables the selected path's I2C line and enables the selected bus (active-low).</description></item>
-		/// </list>
-		/// </remarks>
-		private void SelectGateway()
-		{
-			i2cEnablePinA_.Write( GpioPinValue.Low );
-			i2cEnablePinB_.Write( GpioPinValue.Low );
-			i2cEnablePinC_.Write( GpioPinValue.Low );
-
-			busEnablePinA_.Write( GpioPinValue.High );
-			busEnablePinB_.Write( GpioPinValue.High );
-			busEnablePinC_.Write( GpioPinValue.High );
-
-			// Allow hardware mux/bus lines to settle before enabling the selected route.
-			Thread.Sleep( 500 );
-
-			switch( gatewayIndex_ )
+        /// <summary>
+        /// Initializes GPIO, rotary encoder input, I2C bus, OLED controller, and renders the initial UI.
+        /// </summary>
+        /// <remarks>
+        /// Initialization flow:
+        /// <list type="number">
+        /// <item><description>Open all required GPIO pins and set drive modes.</description></item>
+        /// <item><description>Configure selection inputs (pull-up + falling edge interrupt).</description></item>
+        /// <item><description>Configure and start the rotary encoder step decoder.</description></item>
+        /// <item><description>Open I2C and create the SSD1306 display driver.</description></item>
+        /// <item><description>Render initial selection state and apply routing to the selected gateway.</description></item>
+        /// </list>
+        /// </remarks>
+        public void Initialize()
+        {
+            if ( !InitializePins() )
 			{
-				case 0:
-					i2cEnablePinA_.Write( GpioPinValue.High );
-					busEnablePinA_.Write( GpioPinValue.Low );
-					break;
+				Debug.WriteLine( "GPIO pins initialization failed!" );
+				return;
+			}
 
-				case 1:
-					i2cEnablePinB_.Write( GpioPinValue.High );
-					busEnablePinB_.Write( GpioPinValue.Low );
-					break;
+			if( !InitializeI2cDevices() )
+            {
+                Debug.WriteLine( "I2C devices initialization failed!" );
 
-				case 2:
-					i2cEnablePinC_.Write( GpioPinValue.High );
-					busEnablePinC_.Write( GpioPinValue.Low );
-					break;
+                return;
+            }
+
+            DrawInfo();
+            SelectGateway();
+        }
+
+        public bool InitializePins()
+		{
+			try
+			{
+				gpioController_ = GpioController.GetDefault();
+
+				octalSwitchesShutdownPin_ = gpioController_.OpenPin( OctalSwitchesControlPin.Shutdown );
+				octalSwitchesShutdownPin_.SetDriveMode( GpioPinDriveMode.Output );
+                octalSwitchesShutdownPin_.Write( GpioPinValue.Low );
+
+				encoderPinA_ = gpioController_.OpenPin( EncoderPin.A );
+				encoderPinB_ = gpioController_.OpenPin( EncoderPin.B );
+
+				encoderPinA_.SetDriveMode( GpioPinDriveMode.InputPullUp );
+				encoderPinB_.SetDriveMode( GpioPinDriveMode.InputPullUp );
+
+				// Encoder is polled by the helper; keep GPIO debounce disabled to preserve responsiveness.
+				encoderPinA_.DebounceTimeout = TimeSpan.Zero;
+				encoderPinB_.DebounceTimeout = TimeSpan.Zero;
+
+				encoder_ = new RotaryEncoder( encoderPinA_, encoderPinB_, transitionsPerStep: 2, pollPeriodMs: 2 );
+				encoder_.Stepped += Encoder__Stepped;
+
+				if( !gpioController_.TryOpenPins( out busEnablePins, BusEnablePin.A, BusEnablePin.B, BusEnablePin.C ))
+                {
+					Debug.WriteLine( "Failed to open bus enable pins!" );
+					return false;
+                }
+
+				if( !gpioController_.TryOpenPins( out selectWayPins, SelectWayPin.A, SelectWayPin.B, SelectWayPin.C ) )
+				{
+					Debug.WriteLine( "Failed to open select way pins!" );
+					return false;
+				}
+
+				encoderPinA_ = gpioController_.OpenPin( EncoderPin.A );
+				encoderPinB_ = gpioController_.OpenPin( EncoderPin.B );
+
+                for( int i = 0; i < busEnablePins.Length; i++ )
+                {
+				    busEnablePins[i].SetDriveMode( GpioPinDriveMode.Output );
+					busEnablePins[i].Write( GpioPinValue.Low );
+                }
+
+				for( int i = 0; i < selectWayPins.Length; i++ )
+				{
+					selectWayPins[ i ].SetDriveMode( GpioPinDriveMode.InputPullUp );
+					selectWayPins[ i ].ValueChangedEdge = GpioPinEdge.FallingEdge;
+					selectWayPins[ i ].ValueChanged += SelectWay_ValueChanged;
+				}
+
+				octalSwitchesShutdownPin_.Write( GpioPinValue.High );
+				return true;
+			}
+			catch( Exception ex )
+			{
+				Debug.WriteLine( $"GPIO pin initialization failed: {ex.Message}" );
+				return false;
 			}
 		}
 
-		/// <summary>
-		/// Renders the current gateway selection to the OLED display.
-		/// </summary>
-		/// <remarks>
-		/// UI layout:
-		/// <list type="bullet">
-		/// <item><description>Gateway name near the top.</description></item>
-		/// <item><description>Selection indicator rectangle at the bottom, spaced in 3 columns (0..2).</description></item>
-		/// </list>
-		/// </remarks>
-		private void DrawInfo()
-		{
+
+		public bool InitializeI2cDevices()
+        {
+            i2cController_ = I2cController.FromName( SC13048.I2cBus.I2c1 );
+
+            octalSwitchV4_ =
+                new OctalSwitchV4(
+                    i2cController_.GetDevice(
+                        OctalSwitchV4.GetConnectionSettings( OctalSwitchV4.Address ) ) );
+
+            if( !octalSwitchV4_.Initialize() )
+            {
+                Debug.WriteLine( "Initializing of MAX14662 (V4) failed!" );
+                return false;
+            }
+
+            octalSwitchV5_ =
+                new OctalSwitchV5(
+                    i2cController_.GetDevice(
+                        OctalSwitchV5.GetConnectionSettings( OctalSwitchV5.Address ) ) );
+
+            if( !octalSwitchV5_.Initialize() )
+            {
+                Debug.WriteLine( "Initializing of MAX14662 (V5) failed!" );
+                return false;
+            }
+
+            octalSwitchV6_ =
+                new OctalSwitchV6(
+                    i2cController_.GetDevice(
+                        OctalSwitchV6.GetConnectionSettings( OctalSwitchV6.Address ) ) );
+
+            if( !octalSwitchV6_.Initialize() )
+            {
+                Debug.WriteLine( "Initializing of MAX14662 (V6) failed!" );
+                return false;
+            }
+
+            octalSwitchV7_ =
+                new OctalSwitchV7(
+                    i2cController_.GetDevice(
+                        OctalSwitchV7.GetConnectionSettings( OctalSwitchV7.Address ) ) );
+
+            if( !octalSwitchV7_.Initialize() )
+            {
+                Debug.WriteLine( "Initializing of MAX14662 (V7) failed!" );
+                return false;
+            }
+
+            if( !ProbeAddress( SD1306.GetConnectionSettings().SlaveAddress ) )
+            {
+                Debug.WriteLine( "Probing SSD1306 OLED failed!" );
+                return false;
+            }
+
+            try
+            {
+                displayController_ =
+                    new SD1306( i2cController_.GetDevice( SD1306.GetConnectionSettings() ) );
+
+                graphics_ = new BasicGraphics( 128, 32, ColorFormat.OneBpp );
+            }
+            catch( Exception ex )
+            {
+                Debug.WriteLine( $"I2C probe for SSD1306 OLED failed: {ex.Message}" );
+                return false;	
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Applies the current <see cref="gatewayIndex_"/> to the hardware routing pins.
+        /// </summary>
+        /// <remarks>
+        /// Behavior:
+        /// <list type="bullet">
+        /// <item><description>First disables all I2C paths and disables all buses.</description></item>
+        /// <item><description>Waits briefly to allow signals to settle.</description></item>
+        /// <item><description>Enables the selected path's I2C line and enables the selected bus (active-low).</description></item>
+        /// </list>
+        /// </remarks>
+        private void SelectGateway()
+        {
+            for ( int i = 0; i < busEnablePins.Length; i++ )
+			{
+				busEnablePins[ i ].Write( GpioPinValue.Low );
+			}
+
+            Thread.Sleep( 500 );
+
+            busEnablePins[ gatewayIndex_ ].Write( GpioPinValue.High );
+        }
+
+        /// <summary>
+        /// Renders the current gateway selection to the OLED display.
+        /// </summary>
+        /// <remarks>
+        /// UI layout:
+        /// <list type="bullet">
+        /// <item><description>Gateway name near the top.</description></item>
+        /// <item><description>Selection indicator rectangle at the bottom, spaced in 3 columns (0..2).</description></item>
+        /// </list>
+        /// </remarks>
+        private void DrawInfo()
+        {
+            if( graphics_ == null || displayController_ == null )
+			{
+				Debug.WriteLine( "Graphics or display controller not initialized!" );
+				return;
+			}
+
 			graphics_.Clear();
-			graphics_.DrawString( GATEWAY_NAME[ gatewayIndex_ ], COLOR_WHITE, 0, 4, 2, 2 );
-			graphics_.DrawRectangle( COLOR_WHITE, gatewayIndex_ * 42, 24, 42, 8 );
-			displayController_.DrawBufferNative( graphics_.Buffer );
-		}
+            graphics_.DrawString( GATEWAY_NAME[ gatewayIndex_ ], COLOR_WHITE, 0, 4, 2, 2 );
+            graphics_.DrawRectangle( COLOR_WHITE, gatewayIndex_ * 42, 24, 42, 8 );
+            displayController_.DrawBufferNative( graphics_.Buffer );
+        }
 
-		/// <summary>
-		/// Handles rotary encoder steps by cycling through gateway options and updating both UI and hardware routing.
-		/// </summary>
-		/// <param name="step">
-		/// Encoder step delta. The sign indicates direction; magnitude indicates number of steps.
-		/// </param>
-		/// <remarks>
-		/// This method uses <see cref="drawLock_"/> to ensure the OLED update and routing update stay consistent.
-		/// </remarks>
-		private void Encoder__Stepped( int step )
-		{
-			lock( drawLock_ )
+        private bool ProbeAddress( int address )
+        {
+            bool result = false;
+
+            if ( i2cController_ == null )
 			{
-				int len = GATEWAY_NAME.Length;
-
-				// Wrap index within [0..len-1]. Subtracting step makes direction dependent on encoder wiring.
-				gatewayIndex_ = ( byte )( ( gatewayIndex_ + len - step ) % len );
-
-				// Defensive clamp (note: gatewayIndex_ is a byte, so "< 0" cannot be true).
-				gatewayIndex_ = ( byte )( gatewayIndex_ < 0 ? 0 : gatewayIndex_ > 2 ? 2 : gatewayIndex_ );
-
-				DrawInfo();
-				SelectGateway();
+				Debug.WriteLine( "I2C controller not initialized!" );
+				return false;
 			}
-		}
 
-		/// <summary>
-		/// Direct selection input for gateway A ("Desktop").
-		/// </summary>
-		private void SelectWayPinA__ValueChanged( GpioPin sender, GpioPinValueChangedEventArgs e )
+			I2cDevice dev = 
+                i2cController_.GetDevice( 
+                    new I2cConnectionSettings( address, I2cMode.Master, I2cAddressFormat.SevenBit, 100_000U ) );
+
+            byte[] rBuf = new byte[ 1 ];
+
+            try
+            {
+                if( dev.ReadPartial( rBuf ).Status != I2cTransferStatus.SlaveAddressNotAcknowledged )
+                {
+                    result = true;
+                }
+            }
+            catch( Exception ex )
+            {
+                Debug.WriteLine( $"I2C probe failed for address 0x{address:X2}: {ex.Message}" );
+                result = false;	
+            }
+
+            dev.Dispose();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Handles rotary encoder steps by cycling through gateway options and updating both UI and hardware routing.
+        /// </summary>
+        /// <param name="step">
+        /// Encoder step delta. The sign indicates direction; magnitude indicates number of steps.
+        /// </param>
+        /// <remarks>
+        /// This method uses <see cref="drawLock_"/> to ensure the OLED update and routing update stay consistent.
+        /// </remarks>
+        private void Encoder__Stepped( int step )
+        {
+            lock( drawLock_ )
+            {
+                int len = GATEWAY_NAME.Length;
+
+                // Wrap index within [0..len-1]. Subtracting step makes direction dependent on encoder wiring.
+                gatewayIndex_ = ( byte )( ( gatewayIndex_ + len - step ) % len );
+
+                // Defensive clamp (note: gatewayIndex_ is a byte, so "< 0" cannot be true).
+                gatewayIndex_ = ( byte )( gatewayIndex_ < 0 ? 0 : gatewayIndex_ > 2 ? 2 : gatewayIndex_ );
+
+                DrawInfo();
+                SelectGateway();
+            }
+        }
+
+		private void SelectWay_ValueChanged( GpioPin sender, GpioPinValueChangedEventArgs e )
 		{
-			gatewayIndex_ = 0;
-
+		    gatewayIndex_ = sender.PinNumber == SelectWayPin.A ? ( byte )0 :
+							sender.PinNumber == SelectWayPin.B ? ( byte )1 :
+							sender.PinNumber == SelectWayPin.C ? ( byte )2 : gatewayIndex_;
 			DrawInfo();
 			SelectGateway();
 		}
 
-		/// <summary>
-		/// Direct selection input for gateway B ("GHI Domino").
-		/// </summary>
-		private void SelectWayPinB__ValueChanged( GpioPin sender, GpioPinValueChangedEventArgs e )
-		{
-			gatewayIndex_ = 1;
+        /// <summary>
+        /// Releases all board resources (encoder, display, controllers, pins).
+        /// </summary>
+        virtual public void Dispose()
+        {
+            Terminate();
+        }
 
-			DrawInfo();
-			SelectGateway();
-		}
-
-		/// <summary>
-		/// Direct selection input for gateway C ("Raspberry").
-		/// </summary>
-		private void SelectWayPinC__ValueChanged( GpioPin sender, GpioPinValueChangedEventArgs e )
-		{
-			gatewayIndex_ = 2;
-
-			DrawInfo();
-			SelectGateway();
-		}
-
-		/// <summary>
-		/// Releases all board resources (encoder, display, controllers, pins).
-		/// </summary>
-		virtual public void Dispose()
-		{
-			Terminate();
-		}
-
-		/// <summary>
-		/// Internal cleanup routine invoked by <see cref="Dispose"/>.
-		/// </summary>
-		private void Terminate()
-		{
-			encoder_.Stepped -= Encoder__Stepped;
-			encoder_.Dispose();
-			displayController_.Dispose();
-			i2cController_.Dispose();
-			i2cEnablePinA_.Dispose();
-			i2cEnablePinB_.Dispose();
-			i2cEnablePinC_.Dispose();
-			busEnablePinA_.Dispose();
-			busEnablePinB_.Dispose();
-			busEnablePinC_.Dispose();
-			encoderPinA_.Dispose();
-			encoderPinB_.Dispose();
-		}
-	}
+        /// <summary>
+        /// Internal cleanup routine invoked by <see cref="Dispose"/>.
+        /// </summary>
+        private void Terminate()
+        {
+            if( encoder_ != null )
+			{
+				encoder_.Stepped -= Encoder__Stepped;
+                encoder_?.Dispose();
+            }
+            displayController_?.Dispose();
+            i2cController_?.Dispose();
+            encoderPinA_?.Dispose();
+            encoderPinB_?.Dispose();
+        }
+    }
 }

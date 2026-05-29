@@ -61,6 +61,33 @@ namespace AluLab.Workbench.Hardware
 			protected set => _channelSpiTouch = value;
 		}
 
+		// Matches:
+		// - "LabBridge.1"
+		// - "LabBridge.1 A"
+		// - "LabBridge.2 B"
+		// Group 1: base descriptor, Group 2: channel suffix (optional).
+		private static readonly Regex LabBridgeRegex = new(
+			$@"^({Regex.Escape( LAB_BRIDGE_1 )}|{Regex.Escape( LAB_BRIDGE_2 )})(?:\s+([A-D]))?$",
+			RegexOptions.Compiled | RegexOptions.CultureInvariant );
+
+		private static bool TryGetChannelFromDescription( Match match, out FtChannel channel )
+		{
+			channel = default;
+
+			if( !match.Success )
+			{
+				return false;
+			}
+
+			var channelSuffix = match.Groups.Count > 2 ? match.Groups[ 2 ].Value : string.Empty;
+			if( string.IsNullOrWhiteSpace( channelSuffix ) )
+			{
+				return false;
+			}
+
+			return Enum.TryParse( channelSuffix.Trim(), ignoreCase: true, out channel );
+		}
+
 		/// <summary>
 		/// Enumerates and assigns FT4232H devices to their respective communication channels
 		/// based on channel type and device description.
@@ -76,16 +103,20 @@ namespace AluLab.Workbench.Hardware
 				return false;
 			}
 
-			var regex = new Regex( $@"^({LAB_BRIDGE_1}|{LAB_BRIDGE_2})", RegexOptions.Compiled );
-
 			foreach( var ftx232HDevice in ftx232HDevices )
 			{
 				var type = ftx232HDevice.Type;
-				var channel = ftx232HDevice.Channel;
-				var description = ftx232HDevice.Description;
+				var description = ftx232HDevice.Description ?? string.Empty;
 
-				var match = regex.Match( description );
+				var match = LabBridgeRegex.Match( description.Trim() );
 				var baseDesc = match.Success ? match.Groups[ 1 ].Value : string.Empty;
+
+				// Prefer channel encoded in Description if present; fall back to driver-reported Channel.
+				var channel = ftx232HDevice.Channel;
+				if( TryGetChannelFromDescription( match, out var channelFromDesc ) )
+				{
+					channel = channelFromDesc;
+				}
 
 				_ = (type, channel, baseDesc) switch
 				{
@@ -108,5 +139,4 @@ namespace AluLab.Workbench.Hardware
 			return false;
 		}
 	}
-
 }

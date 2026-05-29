@@ -40,6 +40,8 @@
     <Compile Include="Board.Pins.cs" />
     <Compile Include="Board.cs" />
     <Compile Include="Display\SD1306.cs" />
+    <Compile Include="OctalSwitchBase.cs" />
+    <Compile Include="OctalSwitch.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RotaryEncoder.cs" />

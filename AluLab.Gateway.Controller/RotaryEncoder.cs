@@ -68,7 +68,7 @@ namespace AluLab.Gateway.Controller
 		/// The event argument is <c>+1</c> (right/clockwise) or <c>-1</c> (left/counter-clockwise).
 		/// A step is emitted when the accumulated valid transitions reach <see cref="transitionsPerStep_"/>.
 		/// </remarks>
-		public event StepHandler Stepped;
+		public event StepHandler? Stepped;
 
 		/// <summary>
 		/// Creates a new rotary encoder decoder that polls two GPIO pins (A/B).
@@ -84,19 +84,20 @@ namespace AluLab.Gateway.Controller
 		/// </param>
 		/// <exception cref="ArgumentNullException">Thrown when <paramref name="pinA"/> or <paramref name="pinB"/> is <see langword="null"/>.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="transitionsPerStep"/> or <paramref name="pollPeriodMs"/> is non-positive.</exception>
-		public RotaryEncoder( GpioPin pinA, GpioPin pinB, int transitionsPerStep = 2, int pollPeriodMs = 2 )
+		public RotaryEncoder(
+			GpioPin pinA,
+			GpioPin pinB,
+			int transitionsPerStep = 2,
+			int pollPeriodMs = 2 )
 		{
-			if( pinA == null )
-				throw new ArgumentNullException( nameof( pinA ) );
-			if( pinB == null )
-				throw new ArgumentNullException( nameof( pinB ) );
 			if( transitionsPerStep <= 0 )
 				throw new ArgumentOutOfRangeException( nameof( transitionsPerStep ) );
 			if( pollPeriodMs <= 0 )
 				throw new ArgumentOutOfRangeException( nameof( pollPeriodMs ) );
 
-			pinA_ = pinA;
-			pinB_ = pinB;
+			pinA_ = pinA ?? throw new ArgumentNullException( nameof( pinA ) );
+			pinB_ = pinB ?? throw new ArgumentNullException( nameof( pinB ) );
+
 			transitionsPerStep_ = transitionsPerStep;
 
 			// Initialize with the current physical state to avoid a synthetic transition on the first poll.
