@@ -61,7 +61,7 @@ namespace AluLab.Common.Services
 		/// <summary>
 		/// Event triggered when a snapshot of the ALU outputs is received.
 		/// </summary>
-		public event Action<SyncHub.AluOutputsDto?>? SnapshotOutputsReceived;
+		public event Action<AluOutputsDto?>? SnapshotOutputsReceived;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SyncService"/> class and sets up SignalR event handlers.
@@ -103,7 +103,7 @@ namespace AluLab.Common.Services
 				SnapshotStateReceived?.Invoke( new SyncState( pins ) );
 			} );
 
-			_connection.On<SyncHub.AluOutputsDto?>( "SnapshotOutputs", dto =>
+			_connection.On<AluOutputsDto?>( "SnapshotOutputs", dto =>
 			{
 				Log?.Invoke( $"Sync: SnapshotOutputs received: {( dto is null ? "null" : $"raw=0x{dto.Hex}" )}" );
 				SnapshotOutputsReceived?.Invoke( dto );
@@ -116,7 +116,7 @@ namespace AluLab.Common.Services
 				// Reuse legacy event (HousingView can already do dto->raw)
 				var dto = raw is null
 					? null
-					: new SyncHub.AluOutputsDto( raw.Value, Convert.ToString( raw.Value, 2 ).PadLeft( 8, '0' ), raw.Value.ToString( "X2" ) );
+					: new AluOutputsDto( raw.Value, Convert.ToString( raw.Value, 2 ).PadLeft( 8, '0' ), raw.Value.ToString( "X2" ) );
 
 				SnapshotOutputsReceived?.Invoke( dto );
 			} );
@@ -210,9 +210,9 @@ namespace AluLab.Common.Services
 		/// <summary>
 		/// Requests the last known ALU outputs from the server.
 		/// </summary>
-		/// <returns>An <see cref="SyncHub.AluOutputsDto"/> representing the last outputs, or null if unavailable.</returns>
-		public Task<SyncHub.AluOutputsDto?> GetLastOutputsAsync()
-			=> _connection.InvokeAsync<SyncHub.AluOutputsDto?>( "GetLastOutputsState" );
+		/// <returns>An <see cref="AluOutputsDto"/> representing the last outputs, or null if unavailable.</returns>
+		public Task<AluOutputsDto?> GetLastOutputsAsync()
+			=> _connection.InvokeAsync<AluOutputsDto?>( "GetLastOutputsState" );
 
 		/// <summary>
 		/// Disposes the service and releases all resources.

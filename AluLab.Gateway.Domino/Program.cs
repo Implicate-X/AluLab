@@ -79,7 +79,7 @@ internal static class Program
 			// LibGpiodDriver is instantiated per port.
 			var backlightPort = EPM815.Gpio.Pin.PD14 / 16;
 			var backlightPin = EPM815.Gpio.Pin.PD14 % 16;
-			var gpioBacklightController = new GpioController( PinNumberingScheme.Logical, new LibGpiodDriver( backlightPort ) );
+			var gpioBacklightController = new GpioController( new LibGpiodDriver( backlightPort ) );
 			gpioBacklightController.OpenPin( backlightPin, PinMode.Output );
 
 			// Drive backlight enable high.
@@ -91,7 +91,7 @@ internal static class Program
 			// Pulse low briefly, then release to high.
 			var resetTouchPin = EPM815.Gpio.Pin.PF2 % 16;
 			var resetTouchPort = EPM815.Gpio.Pin.PF2 / 16;
-			var gpioTouchController = new GpioController( PinNumberingScheme.Logical, new LibGpiodDriver( resetTouchPort ) );
+			var gpioTouchController = new GpioController( new LibGpiodDriver( resetTouchPort ) );
 
 			gpioTouchController.OpenPin( resetTouchPin );
 			gpioTouchController.Write( resetTouchPin, PinValue.Low );

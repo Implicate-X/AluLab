@@ -396,7 +396,7 @@ public partial class HousingView : UserControl, INotifyPropertyChanged
 	/// <returns>An <see cref="IDisposable"/> that can be used to unsubscribe from the SnapshotOutputsReceived event.</returns>
 	private IDisposable SubscribeSnapshotOutputs( SyncService syncService )
 	{
-		void Handler( AluLab.Common.Relay.SyncHub.AluOutputsDto? dto )
+		void Handler( AluLab.Common.Relay.AluOutputsDto? dto )
 		{
 			Dispatcher.UIThread.Post( () =>
 			{

@@ -58,6 +58,21 @@ namespace AluLab.Gateway.Controller
 			public const int C = SC13048.GpioPin.PB15;
 		}
 
+		/// <summary>
+		/// GPIO pins that enable the I2C bus buffer (PCA9518) for each gateway target.
+		/// </summary>
+		private class I2cEnablePin
+		{
+			/// <summary>Gateway Desktop PC<br/>PCA9518 EN1.</summary>
+			public const int A = SC13048.GpioPin.PA3;
+
+			/// <summary>Gateway GHI Endpoint Domino<br/>PCA9518 EN2.</summary>
+			public const int B = SC13048.GpioPin.PA4;
+
+			/// <summary>Gateway Raspberry Pi 4B<br/>PCA9518 EN3.</summary>
+			public const int C = SC13048.GpioPin.PA5;
+		}
+
 		private class OctalSwitchesControlPin
 		{
 			public const int Shutdown = SC13048.GpioPin.PA14;

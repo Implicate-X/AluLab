@@ -66,7 +66,7 @@ namespace AluLab.Gateway.Controller
 			}
 		}
 
-		public void SwitchOff( params byte[] switchNumbers )
+		public void TurnOff( params int[] switchNumbers )
 		{
 			byte switches = 0;
 
@@ -80,7 +80,7 @@ namespace AluLab.Gateway.Controller
 
 				for( byte i = 0; i < switchNumbers.Length; i++ )
 				{
-					byte switchNumber = switchNumbers[ i ];
+					byte switchNumber = ( byte )switchNumbers[ i ];
 
 					ValidateBitPos( switchNumber );
 
@@ -93,7 +93,7 @@ namespace AluLab.Gateway.Controller
 			Thread.Sleep( 100 );
 		}
 
-		public void SwitchOn( params byte[] switchNumbers )
+		public void TurnOn( params int[] switchNumbers )
 		{
 			if( switchNumbers.Length < 1 )
 			{
@@ -108,7 +108,7 @@ namespace AluLab.Gateway.Controller
 
 			for( byte i = 0; i < switchNumbers.Length; i++ )
 			{
-				byte switchNumber = switchNumbers[ i ];
+				byte switchNumber = ( byte )switchNumbers[ i ];
 
 				ValidateBitPos( switchNumber );
 
@@ -118,9 +118,9 @@ namespace AluLab.Gateway.Controller
 			Device.WritePartial( new byte[] { 0x00, switches } );
 		}
 
-		public bool SwitchState( byte switchNumber )
+		public bool SwitchState( int switchNumber )
 		{
-			ValidateBitPos( switchNumber );
+			ValidateBitPos( ( byte )switchNumber );
 
 			byte[] rBuf = new byte[ 1 ];
 

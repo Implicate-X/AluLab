@@ -44,14 +44,6 @@ public class SyncHub : Hub
 	public sealed record SyncEvent( long TimestampMillis, string ConnectionId, string Pin, bool State );
 
 	/// <summary>
-	/// DTO for exposing the latest ALU outputs in multiple representations.
-	/// </summary>
-	/// <param name="Raw">Raw output byte.</param>
-	/// <param name="Binary">Binary output representation (8-bit, left padded with 0s).</param>
-	/// <param name="Hex">Hex output representation (2 characters).</param>
-	public sealed record AluOutputsDto( byte Raw, string Binary, string Hex );
-
-	/// <summary>
 	/// Process-wide bounded event queue used for recent activity inspection.
 	/// </summary>
 	private static readonly ConcurrentQueue<SyncEvent> s_events = new();

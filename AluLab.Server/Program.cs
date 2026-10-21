@@ -192,7 +192,7 @@ app.MapGet( "/sync/monitor", ( HttpContext ctx, SyncStateStore store ) =>
   </style>
 </head>
 <body>
-  <h2>SyncHub - Live Monitor 0.107</h2>
+  <h2>SyncHub - Live Monitor 2.20</h2>
   <p>Server time (UTC): " + DateTime.UtcNow.ToString( "O" ) + @"</p>
 
   <h3>Snapshot (current pin status)</h3>

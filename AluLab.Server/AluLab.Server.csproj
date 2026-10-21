@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
 

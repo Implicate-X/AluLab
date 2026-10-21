@@ -243,7 +243,7 @@
 						   VerticalAlignment="Top"
 						   FontFamily="{Binding #HousingControl.NotesFontFamily}">
 					
-					<Run Text="Legende:"/>
+					<Run Text="Legend:"/>
 					<LineBreak/>
 					<Run Text="∨ = OR"/>
 					<LineBreak/>
@@ -251,13 +251,13 @@
 					<LineBreak/>
 					<Run Text="⊻ = XOR"/>
 					<LineBreak/>
-					<Run Text="+ = Echte Addition"/>
+					<Run Text="+ = Genuine Addition"/>
 					<LineBreak/>
-					<Run Text="⊞ = Interne Addition"/>
+					<Run Text="⊞ = Internal Addition"/>
 					<LineBreak/>
-					<Run Text="⊟ = Interne Substraktion"/>
+					<Run Text="⊟ = Internal Subtraction"/>
 					<LineBreak/>
-					<Run Text="+₁= Addition mit Carry"/>
+					<Run Text="+₁= Addition with Carry"/>
 					<LineBreak/>
 				</TextBlock>
 
